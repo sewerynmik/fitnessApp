@@ -1,20 +1,19 @@
 package com.example.aplikacjafitness
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
+import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.ui.semantics.text
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -72,7 +71,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     stepCounterText.text = "$count"
                     val progress = (count.toFloat() / dailyStepGoal * 100).toInt()
                     progressBar.progress = if (progress > 100) 100 else progress
-                    val dyst = (count * 0.7 * 1000).toInt()
+                    val dyst = (count * 0.7 / 1000).toInt()
                     val cal = (count * 0.04).toInt()
                     Distance.text = "Dystans przebyty: $dyst km"
                     Calories.text = "Kalorie spalone: $cal kcal"
@@ -83,6 +82,12 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
 
 
+        val ProfileButton: ImageButton = findViewById(R.id.profileBtn)
+
+        ProfileButton.setOnClickListener {
+            val intent = Intent(this, Profile::class.java)
+            startActivity(intent)
+        }
 
     }
 
@@ -125,6 +130,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
         // Not yet implemented
     }
+
 
 
 }

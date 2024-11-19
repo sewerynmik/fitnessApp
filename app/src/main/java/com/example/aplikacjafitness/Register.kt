@@ -16,8 +16,25 @@ class Register : AppCompatActivity() {
         val registerButton = findViewById<Button>(R.id.register)
         val cancelButton = findViewById<Button>(R.id.Cancel)
 
+        val email = findViewById<EditText>(R.id.loginMailReg)
+        val password = findViewById<EditText>(R.id.loginPassReg)
+        val passwordConfirm = findViewById<EditText>(R.id.loginPassConf)
+
+
         registerButton.setOnClickListener {
-            Toast.makeText(this, "Youre gay", Toast.LENGTH_SHORT).show()
+            if (email.text.toString().isEmpty() || password.text.toString().isEmpty() || passwordConfirm.text.toString().isEmpty()) {
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+            }
+            else if(email.text.toString().isNotEmpty() && password.text.toString().isNotEmpty() && passwordConfirm.text.toString().isNotEmpty() && password.text.toString() == passwordConfirm.text.toString()) {
+                val intent = Intent(this, RegisterData::class.java)
+                startActivity(intent)
+                finish()
+
+
+            }
+            else {
+                Toast.makeText(this, "Passwords don't match", Toast.LENGTH_SHORT).show()
+            }
 
         }
 

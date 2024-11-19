@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/Tlo_gora">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/ProfileCard"
+        android:layout_width="match_parent"
+        android:layout_height="500dp"
+        android:layout_margin="10dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:background="@color/Tlo_gora"
+        android:backgroundTint="#FFFFFF"
+        app:cardBackgroundColor="#A42C2C"
+        app:cardCornerRadius="30dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/profileLogo"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center_horizontal"
+            android:foregroundGravity="center"
+            app:srcCompat="@drawable/logo" />
+
+        <EditText
+            android:id="@+id/profEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:layout_marginTop="-130dp"
+            android:editable="false"
+            android:ems="10"
+            android:gravity="center_horizontal"
+            android:hint="No Email Provided"
+            android:minHeight="48dp" />
+
+        <EditText
+            android:id="@+id/profName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:layout_marginTop="-65dp"
+            android:editable="false"
+            android:ems="10"
+            android:gravity="center_horizontal"
+            android:hint="No Name Provided"
+            android:minHeight="48dp" />
+
+        <EditText
+            android:id="@+id/profSur"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:layout_marginTop="0dp"
+            android:editable="false"
+            android:ems="10"
+            android:gravity="center_horizontal"
+            android:hint="No Surname Provided"
+            android:minHeight="48dp" />
+
+        <EditText
+            android:id="@+id/profWeight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:layout_marginTop="65dp"
+            android:editable="false"
+            android:ems="10"
+            android:gravity="center_horizontal"
+            android:hint="No Weight Provided"
+            android:minHeight="48dp" />
+
+        <EditText
+            android:id="@+id/profHeight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:layout_marginTop="130dp"
+            android:editable="false"
+            android:ems="10"
+            android:gravity="center_horizontal"
+            android:hint="No Height Provided"
+            android:minHeight="48dp" />
+
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/menuBottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="55dp"
+        android:background="#00FFFFFF"
+        android:backgroundTint="#00FFFFFF"
+        android:outlineAmbientShadowColor="#00FFFFFF"
+        android:outlineSpotShadowColor="#00FFFFFF"
+        app:cardBackgroundColor="#00FFFFFF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ProfileCard">
+
+        <ImageButton
+            android:id="@+id/main"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="left"
+            android:layout_marginRight="200dp"
+            android:backgroundTint="#00FFFFFF"
+            android:contentDescription="main"
+            app:srcCompat="@drawable/home" />
+
+        <ImageButton
+            android:id="@+id/workout"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:backgroundTint="#00FFFFFF"
+            android:contentDescription="workout"
+            app:srcCompat="@drawable/workout" />
+
+        <ImageButton
+            android:id="@+id/profileBtn"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="right"
+            android:backgroundTint="#00FFFFFF"
+            android:contentDescription="profile"
+            app:srcCompat="@drawable/person" />
+    </androidx.cardview.widget.CardView>
+</androidx.constraintlayout.widget.ConstraintLayout>

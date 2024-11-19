@@ -34,6 +34,20 @@
             android:exported="false"
             android:theme="@style/AppTheme"/>
 
+        <activity
+            android:name=".Profile"
+            android:exported="false"
+            android:theme="@style/AppTheme"/>
+
+        <activity
+            android:name=".RegisterData"
+            android:exported="false"
+            android:theme="@style/AppTheme"/>
+
+        <activity
+            android:name=".RegisterData2"
+            android:exported="false"
+            android:theme="@style/AppTheme"/>
 
 
         <meta-data

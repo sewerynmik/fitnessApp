@@ -167,6 +167,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="10dp"
+        android:layout_marginBottom="582dp"
         app:cardBackgroundColor="@color/yellow"
         app:cardCornerRadius="16dp"
         app:layout_constraintBottom_toTopOf="@+id/menuBottom"
@@ -187,12 +188,16 @@
         android:id="@+id/menuBottom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="#FFFFFF"
+        android:layout_marginTop="10dp"
+        android:background="#00FFFFFF"
+        android:backgroundTint="#00FFFFFF"
+        android:outlineAmbientShadowColor="#00FFFFFF"
+        android:outlineSpotShadowColor="#00FFFFFF"
+        app:cardBackgroundColor="#00FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/thCard"
-        tools:layout_constraintTop_toBottomOf="@id/yellowCard">
+        app:layout_constraintTop_toBottomOf="@+id/thCard">
 
         <ImageButton
             android:id="@+id/main"
@@ -200,24 +205,27 @@
             android:layout_height="60dp"
             android:layout_gravity="left"
             android:layout_marginRight="200dp"
+            android:backgroundTint="#00FFFFFF"
             android:contentDescription="main"
-            app:srcCompat="@android:drawable/stat_notify_error" />
+            app:srcCompat="@drawable/home" />
 
         <ImageButton
             android:id="@+id/workout"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_gravity="center"
+            android:backgroundTint="#00FFFFFF"
             android:contentDescription="workout"
-            app:srcCompat="@android:drawable/ic_menu_preferences" />
+            app:srcCompat="@drawable/workout" />
 
         <ImageButton
-            android:id="@+id/profile"
+            android:id="@+id/profileBtn"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_gravity="right"
+            android:backgroundTint="#00FFFFFF"
             android:contentDescription="profile"
-            app:srcCompat="@drawable/baseline_person_24" />
+            app:srcCompat="@drawable/person" />
     </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

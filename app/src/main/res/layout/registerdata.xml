@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/Tlo_gora">
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/RegisterCard"
+        android:id="@+id/registerDataCard"
         android:layout_width="match_parent"
         android:layout_height="300dp"
         android:layout_margin="10dp"
@@ -23,7 +22,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:id="@+id/loginLogoReg"
+            android:id="@+id/registerDataLogo"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_gravity="center_horizontal"
@@ -31,58 +30,45 @@
             app:srcCompat="@drawable/logo" />
 
         <EditText
-            android:id="@+id/loginMailReg"
+            android:id="@+id/registerName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|center_vertical"
-            android:layout_marginTop="-40dp"
+            android:layout_marginTop="-20dp"
             android:ems="10"
             android:gravity="center_horizontal"
-            android:hint="email"
-            android:inputType="textEmailAddress"
+            android:hint="Name"
+            android:inputType="text"
             android:minHeight="48dp" />
 
         <EditText
-            android:id="@+id/loginPassReg"
+            android:id="@+id/registerSurr"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|center_vertical"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="40dp"
             android:ems="10"
             android:gravity="center_horizontal"
-            android:hint="password"
-            android:inputType="textPassword"
-            android:minHeight="48dp" />
-
-        <EditText
-            android:id="@+id/loginPassConf"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal|center_vertical"
-            android:layout_marginTop="60dp"
-            android:ems="10"
-            android:gravity="center_horizontal"
-            android:hint="password"
-            android:inputType="textPassword"
+            android:hint="Surname"
+            android:inputType="text"
             android:minHeight="48dp" />
 
         <Button
-            android:id="@+id/register"
+            android:id="@+id/continueButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_marginEnd="35dp"
             android:layout_marginBottom="10dp"
-            android:text="Register" />
+            android:text="Continue" />
 
         <Button
-            android:id="@+id/Cancel"
+            android:id="@+id/goBackButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|start"
             android:layout_marginStart="35dp"
             android:layout_marginBottom="10dp"
-            android:text="Cancel" />
+            android:text="Go Back" />
     </androidx.cardview.widget.CardView>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

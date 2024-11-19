@@ -1,5 +1,6 @@
 package com.example.aplikacjafitness
 
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -25,11 +26,18 @@ class Login : AppCompatActivity() {
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
                 finish()
+
+                val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+                val editor = sharedPreferences.edit()
+                editor.putString("EMAIL", email)
+                editor.apply()
+
             } else {
 
                 Toast.makeText(this, "Invalid email or password", Toast.LENGTH_SHORT).show()
             }
         }
+
 
         registerButton.setOnClickListener {
             val intent = Intent(this, Register::class.java)
