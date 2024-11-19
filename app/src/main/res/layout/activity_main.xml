@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_background">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/topCard"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="1dp"
+        android:outlineAmbientShadowColor="#00FFFFFF"
+        android:outlineSpotShadowColor="#001F1818"
+        app:cardBackgroundColor="#00E6E6E6"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:layout_marginTop="15dp"
+            android:layout_marginRight="48dp"
+            android:fontFamily="@font/anonymous_pro_bold"
+            android:text="Imie i nazwisko"
+            android:textColor="#FFFFFF" />
+
+        <ImageView
+            android:id="@+id/Person"
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="right"
+            android:clickable="true"
+            android:contentDescription="profile"
+            android:src="@drawable/baseline_person_24" />
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/fiCard"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="10dp"
+        android:saveEnabled="false"
+        app:cardBackgroundColor="#FFFFFF"
+        app:cardCornerRadius="16dp"
+        app:layout_constraintBottom_toTopOf="@id/secCard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/topCard"
+        app:layout_constraintTop_toBottomOf="@+id/topCard"
+        app:layout_constraintVertical_weight="1">
+
+        <TextView
+            android:id="@+id/topText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:fontFamily="@font/anonymous_pro_bold"
+            android:text="Steps"
+            android:textColor="#000000" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cmnInfo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginLeft="130dp"
+            android:outlineAmbientShadowColor="#00FFFFFF"
+            android:outlineSpotShadowColor="#00FFFFFF"
+            android:visibility="visible"
+            app:cardBackgroundColor="#00FFFFFF">
+
+            <TextView
+                android:id="@+id/dataCal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginTop="10dp"
+                android:fontFamily="@font/anonymous_pro_bold"
+                android:textColor="#000000" />
+
+            <TextView
+                android:id="@+id/dataDis"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginBottom="10dp"
+                android:fontFamily="@font/anonymous_pro_bold"
+                android:textColor="#000000" />
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/fiLeft"
+            android:layout_width="130dp"
+            android:layout_height="130dp"
+            android:layout_marginTop="30dp"
+            android:foregroundGravity="center"
+            android:outlineAmbientShadowColor="#00FFFFFF"
+            android:outlineSpotShadowColor="#00FFFFFF"
+            app:cardBackgroundColor="#007A6C74">
+
+            <ProgressBar
+                android:id="@+id/circularProgressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_marginStart="0.9dp"
+                android:layout_marginTop="5.4dp"
+                android:background="@drawable/circular_shape"
+                android:indeterminate="false"
+                android:progressDrawable="@drawable/circular_progress_bar" />
+
+            <ImageView
+                android:id="@+id/bgFoot"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_marginLeft="-15dp"
+                android:layout_marginTop="-10dp"
+                android:src="@drawable/circle_foreground" />
+
+            <TextView
+                android:id="@+id/stepCounterText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="55dp"
+                android:layout_marginTop="75dp"
+                android:text="@{viewModel.stepCounter}" />
+
+            <ImageView
+                android:id="@+id/stupki"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginLeft="30dp"
+                android:layout_marginTop="15dp"
+                android:src="@mipmap/foot_foreground" />
+        </androidx.cardview.widget.CardView>
+
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/secCard"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="10dp"
+        app:cardBackgroundColor="@color/blue"
+        app:cardCornerRadius="16dp"
+        app:layout_constraintBottom_toTopOf="@id/thCard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/fiCard"
+        app:layout_constraintVertical_weight="1">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Niebieskie pole"
+            android:textColor="#DB0F0F" />
+
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/thCard"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="10dp"
+        app:cardBackgroundColor="@color/yellow"
+        app:cardCornerRadius="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/menuBottom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/secCard"
+        app:layout_constraintVertical_weight="1">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Ostatnie aktywnosci jak pedałowanie itp" />
+
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/menuBottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="#FFFFFF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/thCard"
+        tools:layout_constraintTop_toBottomOf="@id/yellowCard">
+
+        <ImageButton
+            android:id="@+id/main"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="left"
+            android:layout_marginRight="200dp"
+            android:contentDescription="main"
+            app:srcCompat="@android:drawable/stat_notify_error" />
+
+        <ImageButton
+            android:id="@+id/workout"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:contentDescription="workout"
+            app:srcCompat="@android:drawable/ic_menu_preferences" />
+
+        <ImageButton
+            android:id="@+id/profile"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="right"
+            android:contentDescription="profile"
+            app:srcCompat="@drawable/baseline_person_24" />
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
