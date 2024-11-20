@@ -54,6 +54,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
         loginTimestamp = sharedPreferences.getLong("LOGIN_TIMESTAMP", 0)
         isLoggedInFlag = sharedPreferences.getBoolean("IS_LOGGED_IN", false)
+        val savedStepCount = sharedPreferences.getInt("STEP_COUNT", 0)
+        counterFlow.value = savedStepCount
 
         if (!(isLoggedInFlag && System.currentTimeMillis() - loginTimestamp < 24 * 60 * 60 * 1000)) {
             startActivity(Intent(this, Login::class.java))
@@ -104,6 +106,14 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             startActivity(intent)
         }
 
+    }
+
+    override fun onPause() {
+        super.onPause()
+        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putInt("STEP_COUNT", counterFlow.value)
+        editor.apply()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,

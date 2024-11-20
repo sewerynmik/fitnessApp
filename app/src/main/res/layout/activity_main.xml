@@ -10,7 +10,7 @@
         android:id="@+id/topCard"
         android:layout_width="0dp"
         android:layout_height="48dp"
-        android:layout_marginTop="1dp"
+        android:layout_marginTop="40dp"
         android:outlineAmbientShadowColor="#00FFFFFF"
         android:outlineSpotShadowColor="#001F1818"
         app:cardBackgroundColor="#00E6E6E6"
