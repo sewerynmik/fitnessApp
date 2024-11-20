@@ -124,7 +124,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                 isPermissionGranted = true
                 registerSensorListener()
             } else {
-                // Handle permission denial
                 Log.d("MainActivity", "Permission denied")
             }
         }
@@ -156,12 +155,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         // Not yet implemented
     }
 
-    private fun isLoggedIn(): Boolean {
-        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-        val loginTimestamp = sharedPreferences.getLong("LOGIN_TIMESTAMP", 0)
-        val isLoggedIn = sharedPreferences.getBoolean("IS_LOGGED_IN", false)
-        return isLoggedIn && System.currentTimeMillis() - loginTimestamp < 24 * 60 * 60 * 1000
-    }
 
 
 
