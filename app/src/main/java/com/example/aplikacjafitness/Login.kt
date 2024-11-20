@@ -23,7 +23,7 @@ class Login : AppCompatActivity() {
             val password = findViewById<EditText>(R.id.loginPass).text.toString()
 
             if (email == "email@mail.com" && password == "pass") {
-                // Store login data in Shared Preferences first
+
                 val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
                 val editor = sharedPreferences.edit()
                 editor.putString("EMAIL", email)
@@ -31,7 +31,6 @@ class Login : AppCompatActivity() {
                 editor.putBoolean("IS_LOGGED_IN", true)
                 editor.apply()
 
-                // Then start the main activity and finish the login activity
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
                 finish()
@@ -42,6 +41,10 @@ class Login : AppCompatActivity() {
 
 
         registerButton.setOnClickListener {
+            val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+            val editor = sharedPreferences.edit()
+            editor.remove("EMAILreg")
+            editor.apply()
             val intent = Intent(this, Register::class.java)
             startActivity(intent)
             finish()
