@@ -1,5 +1,6 @@
 package com.example.aplikacjafitness
 
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -30,6 +31,11 @@ class Register : AppCompatActivity() {
                 startActivity(intent)
                 finish()
 
+                val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+                val editor = sharedPreferences.edit()
+                editor.putString("EMAILreg", email.text.toString())
+                editor.apply()
+
 
             }
             else {
@@ -47,5 +53,15 @@ class Register : AppCompatActivity() {
 
 
     }
+
+    override fun onResume() {
+        super.onResume()
+
+        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val savedEmail = sharedPreferences.getString("EMAILreg", "")
+        val emailEditText = findViewById<EditText>(R.id.loginMailReg)
+        emailEditText.setText(savedEmail)
+    }
+
 
 }
