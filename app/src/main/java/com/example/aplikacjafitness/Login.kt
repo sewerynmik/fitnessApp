@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.widget.EditText
 import android.widget.Toast
 import android.widget.Button
+import androidx.compose.ui.semantics.text
 
 class Login : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,18 +23,19 @@ class Login : AppCompatActivity() {
             val password = findViewById<EditText>(R.id.loginPass).text.toString()
 
             if (email == "email@mail.com" && password == "pass") {
-
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
-                finish()
-
+                // Store login data in Shared Preferences first
                 val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
                 val editor = sharedPreferences.edit()
                 editor.putString("EMAIL", email)
+                editor.putLong("LOGIN_TIMESTAMP", System.currentTimeMillis())
+                editor.putBoolean("IS_LOGGED_IN", true)
                 editor.apply()
 
+                // Then start the main activity and finish the login activity
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+                finish()
             } else {
-
                 Toast.makeText(this, "Invalid email or password", Toast.LENGTH_SHORT).show()
             }
         }

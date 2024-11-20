@@ -89,6 +89,19 @@
             android:hint="No Height Provided"
             android:minHeight="48dp" />
 
+        <TextView
+            android:id="@+id/logOut"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|left"
+            android:layout_marginLeft="10dp"
+            android:clickable="true"
+            android:gravity="center_horizontal|center_vertical"
+            android:shadowColor="#000000"
+            android:text="Log Out"
+            android:textColor="#D91818"
+            android:textColorHighlight="#121212" />
+
     </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView

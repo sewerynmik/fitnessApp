@@ -62,7 +62,7 @@
             android:ems="10"
             android:gravity="center_horizontal"
             android:hint="Born"
-            android:inputType="date"
+            android:inputType="datetime|date"
             android:minHeight="48dp" />
 
         <Button

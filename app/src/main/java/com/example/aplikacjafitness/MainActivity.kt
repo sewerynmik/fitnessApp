@@ -1,7 +1,9 @@
 package com.example.aplikacjafitness
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -39,10 +41,26 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     lateinit var Distance: TextView
     lateinit var Calories: TextView
 
+    private lateinit var sharedPreferences: SharedPreferences
+    private var loginTimestamp: Long = 0
+    private var isLoggedInFlag: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // zrobione ze nie wylogowywuje z apki przez 24h po pomyslnym zalogowaniu(nie dziala)
+
+        sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        loginTimestamp = sharedPreferences.getLong("LOGIN_TIMESTAMP", 0)
+        isLoggedInFlag = sharedPreferences.getBoolean("IS_LOGGED_IN", false)
+
+        if (!(isLoggedInFlag && System.currentTimeMillis() - loginTimestamp < 24 * 60 * 60 * 1000)) {
+            startActivity(Intent(this, Login::class.java))
+            finish()
+            return
+
+        }
         setContentView(R.layout.activity_main)
 
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
@@ -78,9 +96,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                 }
             }
         }
-
-
-
 
         val ProfileButton: ImageButton = findViewById(R.id.profileBtn)
 
@@ -129,6 +144,13 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
         // Not yet implemented
+    }
+
+    private fun isLoggedIn(): Boolean {
+        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val loginTimestamp = sharedPreferences.getLong("LOGIN_TIMESTAMP", 0)
+        val isLoggedIn = sharedPreferences.getBoolean("IS_LOGGED_IN", false)
+        return isLoggedIn && System.currentTimeMillis() - loginTimestamp < 24 * 60 * 60 * 1000
     }
 
 
