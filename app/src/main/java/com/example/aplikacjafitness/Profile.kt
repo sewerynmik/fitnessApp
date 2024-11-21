@@ -27,6 +27,7 @@ class Profile : AppCompatActivity() {
     private lateinit var profSurTextView: TextView
     private lateinit var profWeightTextView: TextView
     private lateinit var profHeightTextView: TextView
+    private lateinit var profStepGoalTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +39,7 @@ class Profile : AppCompatActivity() {
         profSurTextView = findViewById(R.id.profSur)
         profWeightTextView = findViewById(R.id.profWeight)
         profHeightTextView = findViewById(R.id.profHeight)
+        profStepGoalTextView = findViewById(R.id.profStepGoal)
 
         loadData()
 
@@ -64,6 +66,7 @@ class Profile : AppCompatActivity() {
         profSurTextView.text = sharedPreferences.getString("SURNAME", "")
         profWeightTextView.text = sharedPreferences.getFloat("WEIGHT", 23F).toString()
         profHeightTextView.text = sharedPreferences.getFloat("HEIGHT", 23F).toString()
+        profStepGoalTextView.text = sharedPreferences.getString("DAILY_STEP_GOAL", "6000")
     }
 
     private fun showEditProfilePopup() {
@@ -72,11 +75,14 @@ class Profile : AppCompatActivity() {
         val surnameEditText = dialogView.findViewById<EditText>(R.id.surnameEditText)
         val weightEditText = dialogView.findViewById<EditText>(R.id.weightEditText)
         val heightEditText = dialogView.findViewById<EditText>(R.id.heightEditText)
+        val stepsEditText = dialogView.findViewById<EditText>(R.id.stepsEditText)
 
         nameEditText.setText(sharedPreferences.getString("NAME", ""))
         surnameEditText.setText(sharedPreferences.getString("SURNAME", ""))
         weightEditText.setText(sharedPreferences.getFloat("WEIGHT", 0f).toString())
         heightEditText.setText(sharedPreferences.getFloat("HEIGHT", 0f).toString())
+        val dailyStepGoalString = sharedPreferences.getString("DAILY_STEP_GOAL", "6000")
+        stepsEditText.setText(dailyStepGoalString)
 
         val builder = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -102,6 +108,11 @@ class Profile : AppCompatActivity() {
                     val height = heightEditText.text.toString().toFloatOrNull()
                     if (height != null) {
                         putFloat("HEIGHT", height)
+                    }
+
+                    val steps = stepsEditText.text.toString().toIntOrNull()
+                    if (steps != null) {
+                        putString("DAILY_STEP_GOAL", steps.toString())
                     }
 
                     apply()

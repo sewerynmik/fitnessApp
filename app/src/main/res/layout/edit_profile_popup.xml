@@ -31,4 +31,11 @@
         android:hint="Height (cm)"
         android:inputType="numberDecimal" />
 
+    <EditText
+        android:id="@+id/stepsEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Steps Daily"
+        android:inputType="numberDecimal" />
+
 </LinearLayout>

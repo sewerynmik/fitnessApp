@@ -24,6 +24,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlin.text.toIntOrNull
 
 class MainActivity : ComponentActivity(), SensorEventListener {
 
@@ -58,15 +59,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         isLoggedInFlag = sharedPreferences.getBoolean("IS_LOGGED_IN", false)
         val savedStepCount = sharedPreferences.getInt("STEP_COUNT", 0)
         counterFlow.value = savedStepCount
-
-
-
-
-//        sharedPreferences.edit {
-//            putString("NAME", nameReg)
-//            putString("SURNAME", surReg)
-//        }
-
+        val dailyStepGoalString = sharedPreferences.getString("DAILY_STEP_GOAL", "6000")
+        val dailyStepGoal = dailyStepGoalString?.toIntOrNull() ?: 10000
 
         if (!(isLoggedInFlag && System.currentTimeMillis() - loginTimestamp < 24 * 60 * 60 * 1000)) {
             startActivity(Intent(this, Login::class.java))
@@ -77,8 +71,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         setContentView(R.layout.activity_main)
 
         val name = findViewById<TextView>(R.id.NameAndSurrView)
-        val nameReg = sharedPreferences.getString("NAME", "Janek")
-        val surReg = sharedPreferences.getString("SURNAME", "Kowal")
+        val nameReg = sharedPreferences.getString("NAME", "Name")
+        val surReg = sharedPreferences.getString("SURNAME", "Surname")
         name.text = "$nameReg $surReg"
 
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
@@ -93,10 +87,11 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             isPermissionGranted = true
             registerSensorListener()
         }
-        //progress bar
+
         progressBar = findViewById(R.id.circularProgressBar)
         val stepCounterText = findViewById<TextView>(R.id.stepCounterText)
-        val dailyStepGoal = 6000
+
+        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
 
         val Distance = findViewById<TextView>(R.id.dataDis)
         val Calories = findViewById<TextView>(R.id.dataCal)
