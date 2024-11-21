@@ -137,6 +137,7 @@
             android:layout_gravity="center"
             android:backgroundTint="#00FFFFFF"
             android:contentDescription="workout"
+            android:minHeight="60dp"
             app:srcCompat="@drawable/workout" />
 
         <ImageButton
