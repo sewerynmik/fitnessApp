@@ -34,6 +34,13 @@ class Profile : AppCompatActivity() {
         val profSurTextView: TextView = findViewById(R.id.profSur)
         profSurTextView.text = "Kowalski"
 
+        val profWeightTextView: TextView = findViewById(R.id.profWeight)
+        profWeightTextView.text = "80 kg"
+
+        val profHeightTextView: TextView = findViewById(R.id.profHeight)
+        profHeightTextView.text = "180 cm"
+
+
         val homeButton : ImageButton = findViewById(R.id.main)
 
         homeButton.setOnClickListener {
