@@ -2,6 +2,7 @@ package com.example.aplikacjafitness
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -14,120 +15,132 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.semantics.dismiss
 import androidx.compose.ui.semantics.text
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.ui.semantics.setText
 import androidx.core.content.edit
 import kotlin.text.toFloatOrNull
 
 class Profile : AppCompatActivity() {
+
+    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var profEmailTextView: TextView
+    private lateinit var profNameTextView: TextView
+    private lateinit var profSurTextView: TextView
+    private lateinit var profWeightTextView: TextView
+    private lateinit var profHeightTextView: TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.profile)
 
-        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-        val email = sharedPreferences.getString("EMAIL", "")
-        var name = sharedPreferences.getString("NAME", "")
-        var surname = sharedPreferences.getString("SURNAME", "")
-        var weight = sharedPreferences.getFloat("WEIGHT", 23F)
-        var height = sharedPreferences.getFloat("HEIGHT", 23F)
+        sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        profEmailTextView = findViewById(R.id.profEmail)
+        profNameTextView = findViewById(R.id.profName)
+        profSurTextView = findViewById(R.id.profSur)
+        profWeightTextView = findViewById(R.id.profWeight)
+        profHeightTextView = findViewById(R.id.profHeight)
 
-        val logOutButton: TextView = findViewById(R.id.logOut)
-
-        val profEmailTextView: TextView = findViewById(R.id.profEmail)
-        profEmailTextView.text = email
-
-        val profNameTextView: TextView = findViewById(R.id.profName)
-        profNameTextView.text = name
-
-        val profSurTextView: TextView = findViewById(R.id.profSur)
-        profSurTextView.text = surname
-
-        val profWeightTextView: TextView = findViewById(R.id.profWeight)
-        profWeightTextView.text = weight.toString()
-
-        val profHeightTextView: TextView = findViewById(R.id.profHeight)
-        profHeightTextView.text = height.toString()
-
-//        val editor = sharedPreferences.edit()
-//        sharedPreferences.edit { putString("NAME", name) }
-//        sharedPreferences.edit { putString("SURNAME", surname) }
+        loadData()
 
         val editButton: ImageButton = findViewById(R.id.editButton)
-
-        // In Profile.kt
-
         editButton.setOnClickListener {
-            val dialogView = LayoutInflater.from(this).inflate(R.layout.edit_profile_popup, null)
-            val nameEditText = dialogView.findViewById<EditText>(R.id.nameEditText)
-            val surnameEditText = dialogView.findViewById<EditText>(R.id.surnameEditText)
-            val weightEditText = dialogView.findViewById<EditText>(R.id.weightEditText)
-            val heightEditText = dialogView.findViewById<EditText>(R.id.heightEditText)
-
-            val builder = AlertDialog.Builder(this)
-                .setView(dialogView)
-                .setTitle("Edit Profile")
-                .setPositiveButton("Save") { dialog, _ ->
-                    // Save changes to Shared Preferences
-                    val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-                    sharedPreferences.edit {
-                        val name = nameEditText.text.toString()
-                        if (name.isNotEmpty()) {
-                            putString("NAME", name)
-                        }
-
-                        val surname = surnameEditText.text.toString()
-                        if (surname.isNotEmpty()) {
-                            putString("SURNAME", surname)
-                        }
-
-                        val weight = weightEditText.text.toString().toFloatOrNull()
-                        if (weight != null) {
-                            putFloat("WEIGHT", weight)
-                        }
-
-                        val height = heightEditText.text.toString().toFloatOrNull()
-                        if (height != null) {
-                            putFloat("HEIGHT", height)
-                        }
-
-                        apply() // Save changes
-                    }
-
-                    dialog.dismiss()
-                }
-
-            val dialog = builder.create()
-            dialog.show()
+            showEditProfilePopup()
         }
 
-        val homeButton : ImageButton = findViewById(R.id.main)
-
+        val homeButton: ImageButton = findViewById(R.id.main)
         homeButton.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
 
+        val logOutButton: TextView = findViewById(R.id.logOut)
         logOutButton.setOnClickListener {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle("Logout")
-            builder.setMessage("Do you really want to logout?")
-            builder.setPositiveButton("Yes") { dialog, which ->
-                // Perform logout actions here
-                val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-                val editor = sharedPreferences.edit()
-                editor.putBoolean("IS_LOGGED_IN", false)
-                editor.apply()
+            showLogoutConfirmationDialog()
+        }
+    }
 
-                // Navigate to the login screen
-                val intent = Intent(this, Login::class.java)
-                startActivity(intent)
-                finish()
-            }
-            builder.setNegativeButton("No") { dialog, which ->
-                // Dismiss the dialog
+    private fun loadData() {
+        profEmailTextView.text = sharedPreferences.getString("EMAIL", "")
+        profNameTextView.text = sharedPreferences.getString("NAME", "")
+        profSurTextView.text = sharedPreferences.getString("SURNAME", "")
+        profWeightTextView.text = sharedPreferences.getFloat("WEIGHT", 23F).toString()
+        profHeightTextView.text = sharedPreferences.getFloat("HEIGHT", 23F).toString()
+    }
+
+    private fun showEditProfilePopup() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.edit_profile_popup, null)
+        val nameEditText = dialogView.findViewById<EditText>(R.id.nameEditText)
+        val surnameEditText = dialogView.findViewById<EditText>(R.id.surnameEditText)
+        val weightEditText = dialogView.findViewById<EditText>(R.id.weightEditText)
+        val heightEditText = dialogView.findViewById<EditText>(R.id.heightEditText)
+
+        nameEditText.setText(sharedPreferences.getString("NAME", ""))
+        surnameEditText.setText(sharedPreferences.getString("SURNAME", ""))
+        weightEditText.setText(sharedPreferences.getFloat("WEIGHT", 0f).toString())
+        heightEditText.setText(sharedPreferences.getFloat("HEIGHT", 0f).toString())
+
+        val builder = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setTitle("Edit Profile")
+            .setPositiveButton("Save") { dialog, _ ->
+
+                sharedPreferences.edit {
+                    val name = nameEditText.text.toString()
+                    if (name.isNotEmpty()) {
+                        putString("NAME", name)
+                    }
+
+                    val surname = surnameEditText.text.toString()
+                    if (surname.isNotEmpty()) {
+                        putString("SURNAME", surname)
+                    }
+
+                    val weight = weightEditText.text.toString().toFloatOrNull()
+                    if (weight != null) {
+                        putFloat("WEIGHT", weight)
+                    }
+
+                    val height = heightEditText.text.toString().toFloatOrNull()
+                    if (height != null) {
+                        putFloat("HEIGHT", height)
+                    }
+
+                    apply()
+                }
+
+
+                loadData()
+
                 dialog.dismiss()
             }
-            val dialog = builder.create()
-            dialog.show()
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+
+        val dialog = builder.create()
+        dialog.show()
+    }
+
+    private fun showLogoutConfirmationDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Logout")
+        builder.setMessage("Do you really want to logout?")
+        builder.setPositiveButton("Yes") { dialog, which ->
+
+            sharedPreferences.edit {
+                putBoolean("IS_LOGGED_IN", false)
+                apply()
+            }
+
+
+            val intent = Intent(this, Login::class.java)
+            startActivity(intent)
+            finish()
         }
+        builder.setNegativeButton("No") { dialog, which ->
+
+            dialog.dismiss()
+        }
+        val dialog = builder.create()
+        dialog.show()
     }
 }
