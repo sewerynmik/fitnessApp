@@ -19,6 +19,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.ui.semantics.text
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -97,6 +98,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     val roundedDyst = String.format("%.2f", dyst)
                     Distance.text = "Dystans przebyty: $roundedDyst km"
                     Calories.text = "Kalorie spalone: $cal kcal"
+
+                    sharedPreferences.edit { putInt("STEP_COUNT", count) }
                 }
             }
         }
