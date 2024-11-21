@@ -82,14 +82,12 @@ class Profile : AppCompatActivity() {
         val heightEditText = dialogView.findViewById<EditText>(R.id.heightEditText)
         val stepsEditText = dialogView.findViewById<EditText>(R.id.stepsEditText)
 
-        // Input validation for weightEditText
         weightEditText.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
         weightEditText.filters = arrayOf(InputFilter.LengthFilter(5), WeightInputFilter())
 
         heightEditText.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
         heightEditText.filters = arrayOf(InputFilter.LengthFilter(5), HeightInputFilter())
 
-        // Input validation for nameEditText and surnameEditText
         nameEditText.filters = arrayOf(InputFilter.LengthFilter(20), NameInputFilter())
         surnameEditText.filters = arrayOf(InputFilter.LengthFilter(20), NameInputFilter())
 
@@ -99,7 +97,6 @@ class Profile : AppCompatActivity() {
         heightEditText.setText(sharedPreferences.getFloat("HEIGHT", 1f).toString())
         val dailyStepGoalString = sharedPreferences.getString("DAILY_STEP_GOAL", "6000")
         stepsEditText.setText(dailyStepGoalString)
-        val activityContext = this
 
         val builder = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -164,7 +161,7 @@ class Profile : AppCompatActivity() {
                     dialog.dismiss()
                 }
                 if(!isValid){
-                    val errorMessage = errorMessage.joinToString("\n") // Join error messages with newline
+                    val errorMessage = errorMessage.joinToString("\n")
                     Toast.makeText(this@Profile, errorMessage, Toast.LENGTH_SHORT).show()
                 }
             }
