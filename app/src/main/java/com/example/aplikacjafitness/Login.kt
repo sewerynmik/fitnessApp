@@ -4,14 +4,25 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.view.LayoutInflater
 import android.widget.EditText
 import android.widget.Toast
 import android.widget.Button
+import android.widget.ImageView
+import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.semantics.dismiss
 import androidx.compose.ui.semantics.text
+import pl.droidsonroids.gif.GifImageView
+import androidx.appcompat.app.AlertDialog
+import pl.droidsonroids.gif.GifDrawable
 
 class Login : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        ShowWelcomePopup()
 
         setContentView(R.layout.login)
 
@@ -49,6 +60,23 @@ class Login : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+    }
+
+    private fun ShowWelcomePopup() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.welcome, null) // Declare dialogView here
+        val welcomeGif = dialogView.findViewById<GifImageView>(R.id.welcomeGif)
+        (welcomeGif.drawable as? GifDrawable)?.start()
+
+        val builder = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+
+        val dialog = builder.create()
+        dialog.show()
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            dialog.dismiss()
+        }, 1500)
     }
 
 
