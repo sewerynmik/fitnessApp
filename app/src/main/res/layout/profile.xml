@@ -103,6 +103,14 @@
             android:textColor="#D91818"
             android:textColorHighlight="#121212" />
 
+        <ImageButton
+            android:id="@+id/editButton"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="right|top"
+            android:background="#00FFFFFF"
+            app:srcCompat="@drawable/edit_foreground" />
+
     </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
