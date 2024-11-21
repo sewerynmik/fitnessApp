@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         val savedStepCount = sharedPreferences.getInt("STEP_COUNT", 0)
         counterFlow.value = savedStepCount
         val dailyStepGoalString = sharedPreferences.getString("DAILY_STEP_GOAL", "6000")
-        val dailyStepGoal = dailyStepGoalString?.toIntOrNull() ?: 10000
+        val dailyStepGoal = dailyStepGoalString?.toIntOrNull() ?: 6000
 
         if (!(isLoggedInFlag && System.currentTimeMillis() - loginTimestamp < 24 * 60 * 60 * 1000)) {
             startActivity(Intent(this, Login::class.java))

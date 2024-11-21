@@ -118,9 +118,7 @@ class Profile : AppCompatActivity() {
                     apply()
                 }
 
-
                 loadData()
-
                 dialog.dismiss()
             }
             .setNegativeButton("Cancel") { dialog, _ ->

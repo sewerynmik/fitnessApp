@@ -29,8 +29,6 @@ class Login : AppCompatActivity() {
                 editor.putString("EMAIL", email)
                 editor.putLong("LOGIN_TIMESTAMP", System.currentTimeMillis())
                 editor.putBoolean("IS_LOGGED_IN", true)
-                editor.putString("SURNAME","byl")
-                editor.putString("DAILY_STEP_GOAL","10000")
                 editor.apply()
 
                 val intent = Intent(this, MainActivity::class.java)
