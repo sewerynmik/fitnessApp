@@ -68,7 +68,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center_horizontal"
-            android:layout_marginLeft="130dp"
+            android:layout_marginLeft="100dp"
             android:outlineAmbientShadowColor="#00FFFFFF"
             android:outlineSpotShadowColor="#00FFFFFF"
             android:visibility="visible"
