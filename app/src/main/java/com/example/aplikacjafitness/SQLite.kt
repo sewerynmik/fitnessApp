@@ -125,5 +125,22 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
         return steps
     }
+
+    fun updateUserData(db: SQLiteDatabase, userId: Int, name: String, surname: String, weight: Float?, height: Float?, dailyStepsTarget: Int?) {
+        val values = ContentValues().apply {
+            put("name", name)
+            put("surname", surname)
+            if (weight != null) {
+                put("weight", weight)
+            }
+            if (height != null) {
+                put("height", height)
+            }
+            if (dailyStepsTarget != null) {
+                put("daily_steps_target", dailyStepsTarget)
+            }
+        }
+        db.update("users", values, "id = ?", arrayOf(userId.toString()))
+    }
     // Add other database operations here (e.g., update, delete, query)
 }

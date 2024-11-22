@@ -2,7 +2,6 @@ package com.example.aplikacjafitness
 
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.InputFilter
@@ -23,6 +22,9 @@ import androidx.compose.ui.semantics.setText
 import androidx.core.content.edit
 import java.util.regex.Pattern
 import kotlin.text.toFloatOrNull
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
+
 
 class Profile : AppCompatActivity() {
 
@@ -139,35 +141,37 @@ class Profile : AppCompatActivity() {
                     heightEditText.error = null
                 }
 
-                if(isValid){
+                if (isValid) {
+                    val name = nameEditText.text.toString()
+                    val surname = surnameEditText.text.toString()
+                    val weight = weightEditText.text.toString().toFloatOrNull()
+                    val height = heightEditText.text.toString().toFloatOrNull()
+                    val steps = stepsEditText.text.toString().toIntOrNull()
+
+
                     sharedPreferences.edit {
-                        val name = nameEditText.text.toString()
                         if (name.isNotEmpty()) {
                             putString("NAME", name)
                         }
-
-                        val surname = surnameEditText.text.toString()
                         if (surname.isNotEmpty()) {
                             putString("SURNAME", surname)
                         }
-
-                        val weight = weightEditText.text.toString().toFloatOrNull()
                         if (weight != null) {
                             putFloat("WEIGHT", weight)
                         }
-
-                        val height = heightEditText.text.toString().toFloatOrNull()
                         if (height != null) {
                             putFloat("HEIGHT", height)
                         }
-
-                        val steps = stepsEditText.text.toString().toIntOrNull()
                         if (steps != null) {
                             putString("DAILY_STEP_GOAL", steps.toString())
                         }
-
                         apply()
                     }
+
+                    val dbHelper = DatabaseHelper(this)
+                    val db = dbHelper.writableDatabase
+                    val userId = getUserIdFromSharedPreferences(this)
+                    dbHelper.updateUserData(db, userId, name, surname, weight, height, steps)
 
                     loadData()
                     dialog.dismiss()
@@ -244,3 +248,17 @@ class WeightInputFilter : InputFilter {
         }
     }
 }
+
+private fun getUserIdFromSharedPreferences(context: Context): Int {
+    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+    val savedEmail = sharedPreferences.getString("EMAIL", "")
+    val dbHelper = DatabaseHelper(context)
+    val cursor = dbHelper.readableDatabase.rawQuery("SELECT id FROM users WHERE email = ?", arrayOf(savedEmail))
+    var userId = -1
+    if (cursor.moveToFirst()) {
+        userId = cursor.getInt(0)
+    }
+    cursor.close()
+    return userId
+}
+
