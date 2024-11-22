@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.database.sqlite.SQLiteDatabase
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -18,6 +19,7 @@ import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.intl.Locale
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
@@ -25,9 +27,16 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import kotlin.text.format
 import kotlin.text.toIntOrNull
 
+
 class MainActivity : ComponentActivity(), SensorEventListener {
+
+    private lateinit var dbHelper: DatabaseHelper
+    private lateinit var db: SQLiteDatabase
 
     private val sensorManager: SensorManager by lazy {
         getSystemService(SENSOR_SERVICE) as SensorManager
@@ -53,6 +62,9 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        dbHelper = DatabaseHelper(this)
+        db = dbHelper.writableDatabase
 
         // zrobione ze nie wylogowywuje z apki przez 24h po pomyslnym zalogowaniu(nie dziala)
 
@@ -130,7 +142,12 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     Calories.text = "Calories: $cal kcal"
 
                     sharedPreferences.edit { putInt("STEP_COUNT", count) }
+                    val currentDate = SimpleDateFormat("dd-MM-yyyy",
+                        java.util.Locale.getDefault()).format(Date())
+                    val userId = getUserIdFromSharedPreferences() // Get user ID from Shared Preferences
+                    dbHelper.updateDailySteps(db, currentDate, count, userId)
                 }
+
             }
         }
 
@@ -200,6 +217,19 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         val calendar2 = Calendar.getInstance().apply { timeInMillis = timestamp2 }
         return calendar1.get(Calendar.YEAR) == calendar2.get(Calendar.YEAR) &&
                 calendar1.get(Calendar.DAY_OF_YEAR) == calendar2.get(Calendar.DAY_OF_YEAR)
+    }
+
+    private fun getUserIdFromSharedPreferences(): Int {
+        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val savedEmail = sharedPreferences.getString("EMAIL", "")
+        val dbHelper = DatabaseHelper(this)
+        val cursor = dbHelper.readableDatabase.rawQuery("SELECT id FROM users WHERE email = ?", arrayOf(savedEmail))
+        var userId = -1 // Default value if user not found
+        if (cursor.moveToFirst()) {
+            userId = cursor.getInt(0)
+        }
+        cursor.close()
+        return userId
     }
 
 
