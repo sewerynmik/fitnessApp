@@ -24,7 +24,7 @@ class Login : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.login)
-        val loginLayout = findViewById<View>(R.id.LoginCard) 
+        val loginLayout = findViewById<View>(R.id.LoginCard)
         loginLayout.visibility = View.INVISIBLE
 
         ShowWelcomePopup()
@@ -70,7 +70,7 @@ class Login : AppCompatActivity() {
     }
 
     private fun ShowWelcomePopup() {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.welcome, null) // Declare dialogView here
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.welcome, null)
         val welcomeGif = dialogView.findViewById<GifImageView>(R.id.welcomeGif)
         (welcomeGif.drawable as? GifDrawable)?.start()
 
