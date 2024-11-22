@@ -9,6 +9,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageButton
@@ -47,6 +48,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     private lateinit var sharedPreferences: SharedPreferences
     private var loginTimestamp: Long = 0
     private var isLoggedInFlag: Boolean = false
+    private var lastResetTimestamp: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,10 +59,18 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
         loginTimestamp = sharedPreferences.getLong("LOGIN_TIMESTAMP", 0)
         isLoggedInFlag = sharedPreferences.getBoolean("IS_LOGGED_IN", false)
+        lastResetTimestamp = sharedPreferences.getLong("LAST_RESET_TIMESTAMP", 0)
         val savedStepCount = sharedPreferences.getInt("STEP_COUNT", 0)
         counterFlow.value = savedStepCount
         val dailyStepGoalString = sharedPreferences.getString("DAILY_STEP_GOAL", "6000")
         val dailyStepGoal = dailyStepGoalString?.toIntOrNull() ?: 6000
+
+        val currentTime = System.currentTimeMillis()
+        if (!isSameDay(currentTime, lastResetTimestamp)) {
+            resetStepCount()
+            lastResetTimestamp = currentTime
+            sharedPreferences.edit { putLong("LAST_RESET_TIMESTAMP", lastResetTimestamp) }
+        }
 
         if (!(isLoggedInFlag && System.currentTimeMillis() - loginTimestamp < 24 * 60 * 60 * 1000)) {
             startActivity(Intent(this, Login::class.java))
@@ -169,6 +179,17 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         // Not yet implemented
     }
 
+    private fun resetStepCount() {
+        counterFlow.value = 0
+        sharedPreferences.edit { putInt("STEP_COUNT", 0) }
+    }
+
+    private fun isSameDay(timestamp1: Long, timestamp2: Long): Boolean {
+        val calendar1 = Calendar.getInstance().apply { timeInMillis = timestamp1 }
+        val calendar2 = Calendar.getInstance().apply { timeInMillis = timestamp2 }
+        return calendar1.get(Calendar.YEAR) == calendar2.get(Calendar.YEAR) &&
+                calendar1.get(Calendar.DAY_OF_YEAR) == calendar2.get(Calendar.DAY_OF_YEAR)
+    }
 
 
 
