@@ -66,12 +66,24 @@ class Profile : AppCompatActivity() {
     }
 
     private fun loadData() {
-        profEmailTextView.text = sharedPreferences.getString("EMAIL", "")
-        profNameTextView.text = sharedPreferences.getString("NAME", "")
-        profSurTextView.text = sharedPreferences.getString("SURNAME", "")
-        profWeightTextView.text = sharedPreferences.getFloat("WEIGHT", 2F).toString()
-        profHeightTextView.text = sharedPreferences.getFloat("HEIGHT", 2F).toString()
-        profStepGoalTextView.text = sharedPreferences.getString("DAILY_STEP_GOAL", "6000")
+        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val savedEmail = sharedPreferences.getString("EMAIL", "")
+
+        val dbHelper = DatabaseHelper(this)
+        val cursor = dbHelper.readableDatabase.rawQuery(
+            "SELECT name, surname, weight, height, daily_steps_target FROM users WHERE email = ?",
+            arrayOf(savedEmail)
+        )
+        if (cursor.moveToFirst()) {
+            profEmailTextView.text = savedEmail
+            profNameTextView.text = cursor.getString(0)
+            profSurTextView.text = cursor.getString(1)
+            profWeightTextView.text = cursor.getDouble(2).toString()
+            profHeightTextView.text = cursor.getDouble(3).toString()
+            profStepGoalTextView.text = cursor.getInt(4).toString()
+        } else {
+            Toast.makeText(this, "User not found in database", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun showEditProfilePopup() {

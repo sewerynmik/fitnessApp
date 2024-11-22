@@ -81,9 +81,20 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         setContentView(R.layout.activity_main)
 
         val name = findViewById<TextView>(R.id.NameAndSurrView)
-        val nameReg = sharedPreferences.getString("NAME", "Name")
-        val surReg = sharedPreferences.getString("SURNAME", "Surname")
-        name.text = "$nameReg $surReg"
+        val savedEmail = sharedPreferences.getString("EMAIL", "")
+        val dbHelper = DatabaseHelper(this)
+        val cursor = dbHelper.readableDatabase.rawQuery("SELECT name, surname FROM users WHERE email = ?", arrayOf(savedEmail))
+        if (cursor.moveToFirst()) {
+            val nameReg = cursor.getString(0)
+            val surReg = cursor.getString(1)
+            name.text = "$nameReg $surReg"
+        } else {
+            name.text = "Name Surname"
+        }
+
+        cursor.close()
+
+
 
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
         isSensorAvailable = sensor != null

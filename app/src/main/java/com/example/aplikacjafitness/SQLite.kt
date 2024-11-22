@@ -85,7 +85,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             put("born_date", bornDate)
             put("weight", weight)
             put("height", height)
-            put("daily_steps_target", dailyStepsTarget)
+            put("daily_steps_target", 6000)
             put("password", password)
         }
         db.insert("users", null, values)
