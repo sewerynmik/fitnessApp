@@ -18,6 +18,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.intl.Locale
 import androidx.core.app.ActivityCompat
@@ -31,6 +32,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import kotlin.text.format
 import kotlin.text.toIntOrNull
+
 
 
 class MainActivity : ComponentActivity(), SensorEventListener {
@@ -59,6 +61,9 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     private var isLoggedInFlag: Boolean = false
     private var lastResetTimestamp: Long = 0
 
+    private var lastSensorTimestamp = 0L
+    private val debounceTime = 500L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -72,10 +77,19 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         loginTimestamp = sharedPreferences.getLong("LOGIN_TIMESTAMP", 0)
         isLoggedInFlag = sharedPreferences.getBoolean("IS_LOGGED_IN", false)
         lastResetTimestamp = sharedPreferences.getLong("LAST_RESET_TIMESTAMP", 0)
-        val savedStepCount = sharedPreferences.getInt("STEP_COUNT", 0)
-        counterFlow.value = savedStepCount
+
+        counterFlow.value = 0
         val dailyStepGoalString = sharedPreferences.getString("DAILY_STEP_GOAL", "6000")
         val dailyStepGoal = dailyStepGoalString?.toIntOrNull() ?: 6000
+        val today = SimpleDateFormat("dd-MM-yyyy", java.util.Locale.getDefault()).format(Date())
+        val userId = getUserIdFromSharedPreferences()
+        val stepsToday = dbHelper.getStepsForToday(today, userId)
+
+        if (stepsToday != -1) {
+            counterFlow.value = stepsToday
+        } else {
+            counterFlow.value = 0
+        }
 
         val currentTime = System.currentTimeMillis()
         if (!isSameDay(currentTime, lastResetTimestamp)) {
@@ -144,7 +158,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     sharedPreferences.edit { putInt("STEP_COUNT", count) }
                     val currentDate = SimpleDateFormat("dd-MM-yyyy",
                         java.util.Locale.getDefault()).format(Date())
-                    val userId = getUserIdFromSharedPreferences() // Get user ID from Shared Preferences
+                    val userId = getUserIdFromSharedPreferences()
                     dbHelper.updateDailySteps(db, currentDate, count, userId)
                 }
 
@@ -160,12 +174,17 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (counterFlow.value == 0) {
+            val savedStepCount = sharedPreferences.getInt("STEP_COUNT", 0)
+            counterFlow.value = savedStepCount
+        }
+    }
+
     override fun onPause() {
         super.onPause()
-        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putInt("STEP_COUNT", counterFlow.value)
-        editor.apply()
+        sharedPreferences.edit { putInt("STEP_COUNT", counterFlow.value) }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
@@ -196,8 +215,13 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     override fun onSensorChanged(sensorEvent: SensorEvent?) {
         sensorEvent?.let { event ->
             if (event.sensor.type == Sensor.TYPE_STEP_DETECTOR) {
-                lifecycleScope.launch(Dispatchers.Main) {
-                    counterFlow.value++
+                val currentTimestamp = System.currentTimeMillis()
+                if (currentTimestamp - lastSensorTimestamp > debounceTime) {
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        counterFlow.value++
+                        sharedPreferences.edit { putInt("STEP_COUNT", counterFlow.value) }
+                    }
+                    lastSensorTimestamp = currentTimestamp
                 }
             }
         }
@@ -224,7 +248,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         val savedEmail = sharedPreferences.getString("EMAIL", "")
         val dbHelper = DatabaseHelper(this)
         val cursor = dbHelper.readableDatabase.rawQuery("SELECT id FROM users WHERE email = ?", arrayOf(savedEmail))
-        var userId = -1 // Default value if user not found
+        var userId = -1
         if (cursor.moveToFirst()) {
             userId = cursor.getInt(0)
         }

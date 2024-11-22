@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val DATABASE_NAME = "FitnessApp.db"
-        private const val DATABASE_VERSION = 6 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
+        private const val DATABASE_VERSION = 7 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -25,14 +25,15 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 ")")
 
         db.execSQL("CREATE TABLE \"daily_steps\" (\n" +
+                "\t\"id\"\tINTEGER PRIMARY KEY AUTOINCREMENT,\n" +
                 "\t\"date\"\tTEXT,\n" +
                 "\t\"steps\"\tINTEGER,\n" +
                 "\t\"user_id\"\tINTEGER NOT NULL,\n" +
-                "\tPRIMARY KEY(\"date\"),\n" +
                 "\tCONSTRAINT \"userId__stepsDaily\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\")\n" +
                 ")")
 
         db.execSQL("INSERT INTO users (email, name, surname, born_date, weight, height, daily_steps_target, password) VALUES ('email@mail.com', 'John', 'Doe', '1990-01-01', 70.5, 180.0, 8000, 'pass')")
+        db.execSQL("INSERT INTO users (email, name, surname, born_date, weight, height, daily_steps_target, password) VALUES ('email2@mail.com', 'John2', 'Doe2', '1990-01-01', 70.5, 180.0, 8000, 'pass')")
         db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('22-11-2024', 0, 1)")
     }
 
@@ -90,19 +91,19 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             put("password", password)
         }
         db.insert("users", null, values)
-       // db.close() // Close the database after insertion
+
     }
 
     fun updateDailySteps(db: SQLiteDatabase, date: String, steps: Int, userId: Int) {
         val cursor = db.rawQuery("SELECT steps FROM daily_steps WHERE date = ? AND user_id = ?", arrayOf(date, userId.toString()))
         if (cursor.moveToFirst()) {
-            // Entry exists, update steps
+
             val values = ContentValues().apply {
                 put("steps", steps)
             }
             db.update("daily_steps", values, "date = ? AND user_id = ?", arrayOf(date, userId.toString()))
         } else {
-            // Entry doesn't exist, create new entry
+
             val values = ContentValues().apply {
                 put("date", date)
                 put("steps", steps)
@@ -113,5 +114,16 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         cursor.close()
     }
 
+    fun getStepsForToday(date: String, userId: Int): Int {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT steps FROM daily_steps WHERE date = ? AND user_id = ?", arrayOf(date, userId.toString()))
+        var steps = -1
+        if (cursor.moveToFirst()) {
+            steps = cursor.getInt(0)
+        }
+        cursor.close()
+
+        return steps
+    }
     // Add other database operations here (e.g., update, delete, query)
 }
