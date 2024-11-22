@@ -61,8 +61,10 @@ class Login : AppCompatActivity() {
             val email = findViewById<EditText>(R.id.loginMail).text.toString()
             val password = findViewById<EditText>(R.id.loginPass).text.toString()
 
-            if (email == "email@mail.com" && password == "pass") {
+            val dbHelper = DatabaseHelper(this)
+            val credentialsValid = dbHelper.checkCredentials(email, password)
 
+            if (credentialsValid) {
                 val sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
                 val editor = sharedPreferences.edit()
                 editor.putString("EMAIL", email)

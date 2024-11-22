@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val DATABASE_NAME = "FitnessApp.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 3 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -21,7 +21,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 "\t\"weight\"\tREAL,\n" +
                 "\t\"height\"\tREAL,\n" +
                 "\t\"daily_steps_target\"\tINTEGER,\n" +
-                "\t\"password\"\tTEXT\n" +
+                "\t\"password\"\tTEXT NOT NULL\n" +
                 ")")
 
         db.execSQL("CREATE TABLE \"daily_steps\" (\n" +
@@ -32,13 +32,16 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 "\tCONSTRAINT \"userId__stepsDaily\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\")\n" +
                 ")")
 
-        db.execSQL("INSERT INTO users ( email, name, surname, born_date, weight, height, daily_steps_target, password) VALUES ('email@mail.com', 'John', 'Doe', '1990-01-01', 70.5, 180.0, 8000, 'pass')")
-
+        db.execSQL("INSERT INTO users (id, email, name, surname, born_date, weight, height, daily_steps_target, password) VALUES (1, 'email@mail.com', 'John', 'Doe', '1990-01-01', 70.5, 180.0, 8000, 'pass')")
     }
 
+
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS daily_steps")
-        onCreate(db)
+        if (oldVersion < newVersion) {
+            db.execSQL("DROP TABLE IF EXISTS users")
+            db.execSQL("DROP TABLE IF EXISTS daily_steps")
+            onCreate(db)
+        }
     }
 
     fun insertStepCount(db: SQLiteDatabase, date: String, steps: Int) {
