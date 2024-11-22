@@ -105,8 +105,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     val dyst = (count * 0.7 / 1000).toFloat()
                     val cal = (count * 0.04).toInt()
                     val roundedDyst = String.format("%.2f", dyst)
-                    Distance.text = "Dystans przebyty: $roundedDyst km"
-                    Calories.text = "Kalorie spalone: $cal kcal"
+                    Distance.text = "Distance: $roundedDyst km"
+                    Calories.text = "Calories: $cal kcal"
 
                     sharedPreferences.edit { putInt("STEP_COUNT", count) }
                 }
