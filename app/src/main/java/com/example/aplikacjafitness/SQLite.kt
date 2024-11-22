@@ -76,5 +76,21 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return userEmail
     }
 
+    fun addUserData(email: String, name: String, surname: String, bornDate: String, weight: Double, height: Double, dailyStepsTarget: Int, password: String) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("email", email)
+            put("name", name)
+            put("surname", surname)
+            put("born_date", bornDate)
+            put("weight", weight)
+            put("height", height)
+            put("daily_steps_target", dailyStepsTarget)
+            put("password", password)
+        }
+        db.insert("users", null, values)
+       // db.close() // Close the database after insertion
+    }
+
     // Add other database operations here (e.g., update, delete, query)
 }
