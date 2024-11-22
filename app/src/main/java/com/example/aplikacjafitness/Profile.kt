@@ -105,12 +105,18 @@ class Profile : AppCompatActivity() {
         nameEditText.filters = arrayOf(InputFilter.LengthFilter(20), NameInputFilter())
         surnameEditText.filters = arrayOf(InputFilter.LengthFilter(20), NameInputFilter())
 
-        nameEditText.setText(sharedPreferences.getString("NAME", ""))
-        surnameEditText.setText(sharedPreferences.getString("SURNAME", ""))
-        weightEditText.setText(sharedPreferences.getFloat("WEIGHT", 0f).toString())
-        heightEditText.setText(sharedPreferences.getFloat("HEIGHT", 1f).toString())
-        val dailyStepGoalString = sharedPreferences.getString("DAILY_STEP_GOAL", "6000")
-        stepsEditText.setText(dailyStepGoalString)
+        val dbHelper = DatabaseHelper(this)
+        val db = dbHelper.readableDatabase
+        val userId = getUserIdFromSharedPreferences(this)
+        val cursor = db.rawQuery("SELECT name, surname, weight, height, daily_steps_target FROM users WHERE id = ?", arrayOf(userId.toString()))
+        if (cursor.moveToFirst()) {
+            nameEditText.setText(cursor.getString(0))
+            surnameEditText.setText(cursor.getString(1))
+            weightEditText.setText(cursor.getFloat(2).toString())
+            heightEditText.setText(cursor.getFloat(3).toString())
+            stepsEditText.setText(cursor.getInt(4).toString())
+        }
+        cursor.close()
 
         val builder = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -127,7 +133,7 @@ class Profile : AppCompatActivity() {
                 }
 
                 if (surnameEditText.text.toString().length < 3) {
-                    errorMessage.add( "Surname is too short, it has to be at least 3 letters.\n")
+                    errorMessage.add("Surname is too short, it has to be at least 3 letters.\n")
                     isValid = false
                 } else {
                     surnameEditText.error = null
@@ -148,7 +154,6 @@ class Profile : AppCompatActivity() {
                     val height = heightEditText.text.toString().toFloatOrNull()
                     val steps = stepsEditText.text.toString().toIntOrNull()
 
-
                     sharedPreferences.edit {
                         if (name.isNotEmpty()) {
                             putString("NAME", name)
@@ -168,17 +173,13 @@ class Profile : AppCompatActivity() {
                         apply()
                     }
 
-                    val dbHelper = DatabaseHelper(this)
-                    val db = dbHelper.writableDatabase
-                    val userId = getUserIdFromSharedPreferences(this)
                     dbHelper.updateUserData(db, userId, name, surname, weight, height, steps)
 
                     loadData()
                     dialog.dismiss()
-                }
-                if(!isValid){
-                    val errorMessage = errorMessage.joinToString("\n")
-                    Toast.makeText(this@Profile, errorMessage, Toast.LENGTH_SHORT).show()
+                } else {
+                    val errorMessageString = errorMessage.joinToString("\n")
+                    Toast.makeText(this@Profile, errorMessageString, Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel") { dialog, _ ->
