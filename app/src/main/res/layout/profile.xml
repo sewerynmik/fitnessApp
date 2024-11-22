@@ -3,12 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/Tlo_gora">
+    android:background="@color/Tlo_gora"
+    android:orientation="vertical">
 
     <androidx.cardview.widget.CardView
         android:id="@+id/ProfileCard"
         android:layout_width="match_parent"
-        android:layout_height="500dp"
+        android:layout_height="550dp"
         android:layout_margin="10dp"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
@@ -89,13 +90,45 @@
             android:hint="No Height Provided"
             android:minHeight="48dp" />
 
+        <EditText
+            android:id="@+id/profStepGoal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:layout_marginTop="195dp"
+            android:editable="false"
+            android:ems="10"
+            android:gravity="center_horizontal"
+            android:hint="6000"
+            android:minHeight="48dp" />
+
+        <TextView
+            android:id="@+id/logOut"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|left"
+            android:layout_marginLeft="10dp"
+            android:clickable="true"
+            android:gravity="center_horizontal|center_vertical"
+            android:shadowColor="#000000"
+            android:text="Log Out"
+            android:textColor="#D91818"
+            android:textColorHighlight="#121212" />
+
+        <ImageButton
+            android:id="@+id/editButton"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="right|top"
+            android:background="#00FFFFFF"
+            app:srcCompat="@drawable/edit_foreground" />
+
     </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/menuBottom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="55dp"
         android:background="#00FFFFFF"
         android:backgroundTint="#00FFFFFF"
         android:outlineAmbientShadowColor="#00FFFFFF"
@@ -123,6 +156,7 @@
             android:layout_gravity="center"
             android:backgroundTint="#00FFFFFF"
             android:contentDescription="workout"
+            android:minHeight="60dp"
             app:srcCompat="@drawable/workout" />
 
         <ImageButton

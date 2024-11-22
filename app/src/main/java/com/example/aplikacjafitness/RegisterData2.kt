@@ -1,5 +1,6 @@
 package com.example.aplikacjafitness
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -27,7 +28,13 @@ class RegisterData2 : AppCompatActivity() {
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
 
+                val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+                val editor = sharedPreferences.edit()
+                editor.remove("EMAILreg")
+                editor.apply()
+
             }
+
         }
 
         val goBack2Button = findViewById<Button>(R.id.goBack2Button)
