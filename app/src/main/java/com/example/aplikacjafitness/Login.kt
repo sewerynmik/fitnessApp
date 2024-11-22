@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import android.widget.Button
@@ -22,9 +23,15 @@ class Login : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        setContentView(R.layout.login)
+        val loginLayout = findViewById<View>(R.id.LoginCard) // Get login layout
+        loginLayout.visibility = View.INVISIBLE
+
         ShowWelcomePopup()
 
-        setContentView(R.layout.login)
+        Handler(Looper.getMainLooper()).postDelayed({
+            loginLayout.visibility = View.VISIBLE // Show login layout after delay
+        }, 1500)
 
         val loginButton = findViewById<Button>(R.id.loginButton)
         val registerButton = findViewById<Button>(R.id.registerButton)
@@ -35,7 +42,7 @@ class Login : AppCompatActivity() {
 
             if (email == "email@mail.com" && password == "pass") {
 
-                val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+                val sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
                 val editor = sharedPreferences.edit()
                 editor.putString("EMAIL", email)
                 editor.putLong("LOGIN_TIMESTAMP", System.currentTimeMillis())
@@ -52,7 +59,7 @@ class Login : AppCompatActivity() {
 
 
         registerButton.setOnClickListener {
-            val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+            val sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
             val editor = sharedPreferences.edit()
             editor.remove("EMAILreg")
             editor.apply()
@@ -76,7 +83,7 @@ class Login : AppCompatActivity() {
 
         Handler(Looper.getMainLooper()).postDelayed({
             dialog.dismiss()
-        }, 1500)
+        }, 1400)
     }
 
 
