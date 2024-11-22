@@ -24,13 +24,13 @@ class Login : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.login)
-        val loginLayout = findViewById<View>(R.id.LoginCard) // Get login layout
+        val loginLayout = findViewById<View>(R.id.LoginCard) 
         loginLayout.visibility = View.INVISIBLE
 
         ShowWelcomePopup()
 
         Handler(Looper.getMainLooper()).postDelayed({
-            loginLayout.visibility = View.VISIBLE // Show login layout after delay
+            loginLayout.visibility = View.VISIBLE
         }, 1500)
 
         val loginButton = findViewById<Button>(R.id.loginButton)
