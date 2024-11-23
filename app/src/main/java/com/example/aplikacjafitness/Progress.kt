@@ -61,7 +61,10 @@ class Progress : AppCompatActivity(){
         }
 
         val dataSet = LineDataSet(entries, "Weight")
-        dataSet.color = Color.BLUE
+        dataSet.color = Color.GREEN
+        dataSet.circleRadius = 5f
+        dataSet.circleColors = listOf(Color.GREEN)
+        dataSet.setDrawCircles(true)
 
 
         val dataSets = ArrayList<ILineDataSet>()
@@ -69,6 +72,31 @@ class Progress : AppCompatActivity(){
 
         val data = LineData(dataSets)
         lineChart.data = data
+
+        lineChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        lineChart.xAxis.granularity = 1f
+        lineChart.xAxis.setDrawLabels(true)
+        lineChart.xAxis.setDrawGridLines(false)
+
+        lineChart.description.isEnabled = false
+        lineChart.legend.isEnabled = false
+        lineChart.axisLeft.isEnabled = false
+        lineChart.axisRight.isEnabled = false
+        lineChart.setScaleEnabled(false)
+        lineChart.setPinchZoom(false)
+
+        dataSet.setColors(*ColorTemplate.MATERIAL_COLORS)
+        dataSet.setDrawValues(false)
+        dataSet.setDrawCircles(false)
+        dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
+
+        val gradientDrawable = GradientDrawable(
+            GradientDrawable.Orientation.TOP_BOTTOM,
+            intArrayOf(Color.argb(255, 0, 255, 0), Color.argb(0, 0, 255, 0))
+        )
+
+        dataSet.setDrawFilled(true)
+        dataSet.fillDrawable = gradientDrawable
 
         lineChart.xAxis.valueFormatter = IndexAxisValueFormatter(dates)
 
