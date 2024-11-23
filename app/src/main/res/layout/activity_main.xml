@@ -224,14 +224,14 @@
             app:srcCompat="@drawable/workout" />
 
         <ImageButton
-            android:id="@+id/profileBtn2"
+            android:id="@+id/progressBtn"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_gravity="right"
-            android:backgroundTint="#00000000"
+            android:background="@drawable/progress"
+            android:backgroundTint="#000000"
             android:contentDescription="profile"
-            app:srcCompat="@drawable/progress"
-            tools:srcCompat="@drawable/progress" />
+            app:srcCompat="@drawable/progress" />
     </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

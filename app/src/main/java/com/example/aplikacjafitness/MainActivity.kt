@@ -189,6 +189,13 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             startActivity(intent)
         }
 
+        val ProgressButton: ImageButton = findViewById(R.id.progressBtn)
+
+        ProgressButton.setOnClickListener {
+            val intent = Intent(this, Progress::class.java)
+            startActivity(intent)
+        }
+
     }
 
     override fun onResume() {
