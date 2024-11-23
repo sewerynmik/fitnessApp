@@ -267,7 +267,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                 calendar1.get(Calendar.DAY_OF_YEAR) == calendar2.get(Calendar.DAY_OF_YEAR)
     }
 
-    private fun getUserIdFromSharedPreferences(): Int {
+    fun getUserIdFromSharedPreferences(): Int {
         val sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
         val savedEmail = sharedPreferences.getString("EMAIL", "")
         val dbHelper = DatabaseHelper(this)

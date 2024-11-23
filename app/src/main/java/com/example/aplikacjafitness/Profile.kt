@@ -61,6 +61,12 @@ class Profile : AppCompatActivity() {
             startActivity(intent)
         }
 
+        val progressButton: ImageButton = findViewById(R.id.progressBtn)
+        progressButton.setOnClickListener {
+            val intent = Intent(this, Progress::class.java)
+            startActivity(intent)
+        }
+
         val logOutButton: TextView = findViewById(R.id.logOut)
         logOutButton.setOnClickListener {
             showLogoutConfirmationDialog()
@@ -250,7 +256,7 @@ class WeightInputFilter : InputFilter {
     }
 }
 
-private fun getUserIdFromSharedPreferences(context: Context): Int {
+fun getUserIdFromSharedPreferences(context: Context): Int {
     val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
     val savedEmail = sharedPreferences.getString("EMAIL", "")
     val dbHelper = DatabaseHelper(context)

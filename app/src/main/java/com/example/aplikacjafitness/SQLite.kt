@@ -13,7 +13,7 @@ import kotlin.text.format
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val DATABASE_NAME = "FitnessApp.db"
-        private const val DATABASE_VERSION = 7 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
+        private const val DATABASE_VERSION = 8 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -37,9 +37,27 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 "\tCONSTRAINT \"userId__stepsDaily\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\")\n" +
                 ")")
 
+        db.execSQL("CREATE TABLE \"weight_progress\" (\n" +
+                "\t\"id\"\tINTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,\n" +
+                "\t\"weight\"\tNUMERIC,\n" +
+                "\t\"date\"\tTEXT,\n" +
+                "\t\"user_id\"\tINTEGER,\n" +
+                "\tCONSTRAINT \"weight_users\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\")\n" +
+                ");")
+
         db.execSQL("INSERT INTO users (email, name, surname, born_date, weight, height, daily_steps_target, password) VALUES ('email@mail.com', 'John', 'Doe', '1990-01-01', 70.5, 180.0, 8000, 'pass')")
         db.execSQL("INSERT INTO users (email, name, surname, born_date, weight, height, daily_steps_target, password) VALUES ('email2@mail.com', 'John2', 'Doe2', '1990-01-01', 70.5, 180.0, 8000, 'pass')")
-        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('22-11-2024', 0, 1)")
+
+        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('23-11-2024', 567, 1)")
+        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('22-11-2024', 1234, 1)")
+        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('21-11-2024', 2312, 1)")
+        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('19-11-2024', 1876, 1)")
+        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('18-11-2024', 1927, 1)")
+        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('17-11-2024', 2534, 1)")
+
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (88.5, '22-11-2024', 1)")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (85, '20-11-2024', 1)")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (72, '15-11-2024', 1)")
     }
 
 
@@ -161,6 +179,22 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }
 
         return stepsList.reversed()
+    }
+
+    fun getWeightProgress(userId: Int): Pair<List<Float>, List<String>> {
+        val weights = mutableListOf<Float>()
+        val dates = mutableListOf<String>()
+        val db = this.readableDatabase
+        val cursor = db.rawQuery("SELECT weight, date FROM weight_progress WHERE user_id = ?", arrayOf(userId.toString()))
+
+        while (cursor.moveToNext()) {
+            weights.add(cursor.getFloat(0))
+            dates.add(cursor.getString(1))
+        }
+
+        cursor.close()
+
+        return Pair(weights, dates)
     }
 
 
