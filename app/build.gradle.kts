@@ -75,4 +75,5 @@ dependencies {
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("com.google.android.material:material:1.9.0")
     implementation("pl.droidsonroids.gif:android-gif-drawable:1.2.+")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }

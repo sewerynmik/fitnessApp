@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
+import android.graphics.drawable.GradientDrawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -18,6 +19,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.add
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.intl.Locale
@@ -32,7 +34,16 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import kotlin.text.format
 import kotlin.text.toIntOrNull
-
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
+import com.github.mikephil.charting.utils.ColorTemplate
+import android.graphics.Color
+import androidx.core.text.color
 
 
 class MainActivity : ComponentActivity(), SensorEventListener {
@@ -64,6 +75,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     private var lastSensorTimestamp = 0L
     private val debounceTime = 500L
 
+    private lateinit var lineChart: LineChart
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -73,7 +86,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
         // zrobione ze nie wylogowywuje z apki przez 24h po pomyslnym zalogowaniu(nie dziala)
 
-        sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
         loginTimestamp = sharedPreferences.getLong("LOGIN_TIMESTAMP", 0)
         isLoggedInFlag = sharedPreferences.getBoolean("IS_LOGGED_IN", false)
         lastResetTimestamp = sharedPreferences.getLong("LAST_RESET_TIMESTAMP", 0)
@@ -105,6 +118,10 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
         }
         setContentView(R.layout.activity_main)
+
+        lineChart = findViewById<LineChart>(R.id.lineChart)
+        setupLineChart()
+        loadLineChartData()
 
         val name = findViewById<TextView>(R.id.NameAndSurrView)
         val savedEmail = sharedPreferences.getString("EMAIL", "")
@@ -138,7 +155,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         progressBar = findViewById(R.id.circularProgressBar)
         val stepCounterText = findViewById<TextView>(R.id.stepCounterText)
 
-        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
 
         val Distance = findViewById<TextView>(R.id.dataDis)
         val Calories = findViewById<TextView>(R.id.dataCal)
@@ -244,7 +261,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     }
 
     private fun getUserIdFromSharedPreferences(): Int {
-        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
         val savedEmail = sharedPreferences.getString("EMAIL", "")
         val dbHelper = DatabaseHelper(this)
         val cursor = dbHelper.readableDatabase.rawQuery("SELECT id FROM users WHERE email = ?", arrayOf(savedEmail))
@@ -256,6 +273,80 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         return userId
     }
 
+    private fun setupLineChart() {
+        lineChart.description.isEnabled = false
+        lineChart.setTouchEnabled(true)
+        lineChart.setDragEnabled(true)
+        lineChart.setScaleEnabled(true)
+        lineChart.setPinchZoom(true)
+        lineChart.setDrawGridBackground(false)
+    }
+
+    private fun loadLineChartData() {
+        val entries = ArrayList<Entry>()
+        val userId = getUserIdFromSharedPreferences()
+        val last7DaysSteps = dbHelper.getLast7DaysSteps(userId)
+        val xAxisLabels = ArrayList<String>()
+        val averageSteps = last7DaysSteps.average().toFloat()
+
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("dd", java.util.Locale.getDefault())
+
+        calendar.add(Calendar.DAY_OF_YEAR, -6)
+
+        for (i in 0 until last7DaysSteps.size) {
+            xAxisLabels.add(dateFormat.format(calendar.time))
+            entries.add(Entry(i.toFloat(), last7DaysSteps[i].toFloat()))
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+        }
+
+        val dataSet = LineDataSet(entries, "Steps")
+        dataSet.setColors(*ColorTemplate.MATERIAL_COLORS)
+        dataSet.setDrawValues(false)
+        dataSet.setDrawCircles(false)
+        dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
+
+        val gradientDrawable = GradientDrawable(
+            GradientDrawable.Orientation.TOP_BOTTOM,
+            intArrayOf(Color.argb(255, 0, 0, 255), Color.argb(0, 0, 0, 255))
+        )
+
+        dataSet.setDrawFilled(true)
+        dataSet.fillDrawable = gradientDrawable
+
+        val averageLineDataSet = LineDataSet(listOf(
+            Entry(0f, averageSteps),
+            Entry(last7DaysSteps.size.toFloat() - 1, averageSteps)
+        ), "Average")
+
+        averageLineDataSet.color = Color.RED
+        averageLineDataSet.enableDashedLine(10f, 10f, 0f)
+        averageLineDataSet.setDrawCircles(false)
+
+        lineChart.xAxis.valueFormatter = IndexAxisValueFormatter(xAxisLabels)
+        lineChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        lineChart.xAxis.granularity = 1f
+        lineChart.xAxis.setDrawLabels(true)
+        lineChart.xAxis.setDrawGridLines(false)
+
+        lineChart.description.isEnabled = false
+        lineChart.legend.isEnabled = false
+        lineChart.axisLeft.isEnabled = false
+        lineChart.axisRight.isEnabled = false
+        lineChart.setTouchEnabled(false)
+        lineChart.isDragEnabled = false
+        lineChart.setScaleEnabled(false)
+        lineChart.setPinchZoom(false)
+
+        val dataSets = ArrayList<ILineDataSet>()
+        dataSets.add(dataSet)
+        dataSets.add(averageLineDataSet)
+
+        val data = LineData(dataSets)
+        lineChart.data = data
+
+        lineChart.invalidate()
+    }
 
 
 }

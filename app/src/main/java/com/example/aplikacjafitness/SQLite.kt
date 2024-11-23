@@ -4,6 +4,11 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.icu.util.Calendar
+import androidx.compose.foundation.layout.add
+import androidx.compose.ui.text.intl.Locale
+import java.text.SimpleDateFormat
+import kotlin.text.format
 
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
@@ -142,5 +147,22 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }
         db.update("users", values, "id = ?", arrayOf(userId.toString()))
     }
-    // Add other database operations here (e.g., update, delete, query)
+
+    fun getLast7DaysSteps(userId: Int): List<Int> {
+        val stepsList = mutableListOf<Int>()
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("dd-MM-yyyy", java.util.Locale.getDefault())
+
+        for (i in 0..6) {
+            val date = dateFormat.format(calendar.time)
+            val steps = getStepsForToday(date, userId)
+            stepsList.add(steps)
+            calendar.add(Calendar.DAY_OF_YEAR, -1)
+        }
+
+        return stepsList.reversed()
+    }
+
+
+// Add other database operations here (e.g., update, delete, query)
 }
