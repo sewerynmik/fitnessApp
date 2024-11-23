@@ -40,14 +40,6 @@
             android:fontFamily="@font/anonymous_pro_bold"
             android:textColor="#FFFFFF" />
 
-        <ImageView
-            android:id="@+id/Person"
-            android:layout_width="48dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="right"
-            android:clickable="true"
-            android:contentDescription="profile"
-            android:src="@drawable/baseline_person_24" />
     </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
