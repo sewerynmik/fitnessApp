@@ -240,13 +240,12 @@ class Profile : AppCompatActivity() {
     }
 
     private fun loadProfilePicture() {
-        val file = File(filesDir, "profile_picture.jpg") // Adjust file name and path as needed
+        val file = File(filesDir, "profile_picture.jpg")
         if (file.exists()) {
             val bitmap = BitmapFactory.decodeFile(file.absolutePath)
             profileImageView.setImageBitmap(bitmap)
         } else {
-            // Set a default image if no profile picture is found
-            profileImageView.setImageResource(R.drawable.logo) // Replace with your default image
+            profileImageView.setImageResource(R.drawable.logo)
         }
 }
 
@@ -309,13 +308,12 @@ fun getUserIdFromSharedPreferences(context: Context): Int {
                     val bitmap = BitmapFactory.decodeStream(inputStream)
                     inputStream?.close()
 
-                    val file = File(filesDir, "profile_picture.jpg") // Adjust file name and path as needed
+                    val file = File(filesDir, "profile_picture.jpg")
                     val outputStream = FileOutputStream(file)
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
                     outputStream.flush()
                     outputStream.close()
 
-                    // Update the ImageView
                     profileImageView.setImageBitmap(bitmap)
 
                     Toast.makeText(this, "Profile picture saved", Toast.LENGTH_SHORT).show()

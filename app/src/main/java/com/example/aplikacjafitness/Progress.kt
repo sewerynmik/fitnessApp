@@ -1,9 +1,11 @@
 package com.example.aplikacjafitness
 
+import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.Gravity
 import android.widget.EditText
 import android.widget.ImageButton
@@ -120,17 +122,24 @@ class Progress : AppCompatActivity(){
             LinearLayout.LayoutParams.WRAP_CONTENT,
             true)
 
-        // Get references to views in the popup
         val weightInput: EditText = popupView.findViewById(R.id.weightInput)
         val addPhotoButton: android.widget.Button = popupView.findViewById(R.id.addPhotoButton)
 
-        // Set click listeners for buttons in the popup
         addPhotoButton.setOnClickListener {
-            // Implement photo picking logic here
+            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            startActivityForResult(intent, PICK_IMAGE_REQUEST)
         }
 
-        // Show the popup
         popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0)
     }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
+            val selectedImageUri = data.data
+        }
+    }
 
+    companion object {
+        private const val PICK_IMAGE_REQUEST = 1
+    }
 }

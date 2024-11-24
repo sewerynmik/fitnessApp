@@ -362,13 +362,13 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     }
 
     private fun loadProfilePictureForButton() {
-        val file = File(filesDir, "profile_picture.jpg") // Adjust file name and path as needed
+        val file = File(filesDir, "profile_picture.jpg")
         if (file.exists()) {
             val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-            profileBtn.setImageBitmap(bitmap) // Assuming profileBtn is your ImageButton
+            profileBtn.setImageBitmap(bitmap)
         } else {
-            // Set a default image if no profile picture is found
-            profileBtn.setImageResource(R.drawable.person) // Replace with your default image
+
+            profileBtn.setImageResource(R.drawable.person)
         }
     }
 
