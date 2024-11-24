@@ -2,6 +2,7 @@ package com.example.aplikacjafitness
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
@@ -9,16 +10,18 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.DisplayMetrics
 import android.view.Gravity
+import android.view.MotionEvent
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.semantics.text
-import androidx.core.text.color
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -26,12 +29,14 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
+import de.hdodenhof.circleimageview.CircleImageView
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.text.toFloatOrNull
+import com.github.mikephil.charting.components.YAxis.AxisDependency.LEFT
 
 
 class Progress : AppCompatActivity(){
@@ -39,17 +44,38 @@ class Progress : AppCompatActivity(){
     private lateinit var lineChart: LineChart
     private lateinit var dbHelper: DatabaseHelper
 
+    private lateinit var profilePic: CircleImageView
+
     private lateinit var weightInput: EditText
+
+    private lateinit var weightProg: TextView
+    private lateinit var progressWeight: TextView
+    private lateinit var progressWeight2: TextView
+    private lateinit var bmiProgress: TextView
+
+    private var dates: List<String> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.progress)
 
+
+        profilePic = findViewById(R.id.profilePicProg)
+        loadProfilePictureForButton()
+
+        weightProg = findViewById(R.id.weightProg)
+        progressWeight = findViewById(R.id.progressWeight)
+        progressWeight2 = findViewById(R.id.progressWeight2)
+        bmiProgress = findViewById(R.id.bmiProgress)
+
         dbHelper = DatabaseHelper(this)
         lineChart = findViewById(R.id.lineChartProgress)
         setupLineChart()
         loadLineChartData()
+
+        val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
+        updateChartData(currentDate)
 
         val homeButton: ImageButton = findViewById(R.id.main)
         homeButton.setOnClickListener {
@@ -76,22 +102,28 @@ class Progress : AppCompatActivity(){
     private fun loadLineChartData() {
         val entries = ArrayList<Entry>()
         val userId = Utils.getUserIdFromSharedPreferences(this)
-        val (weights, dates) = dbHelper.getWeightProgress(userId)
+        val (weights, initialDates) = dbHelper.getWeightProgress(userId)
 
-        val sortedData = dates.zip(weights).sortedBy { it.first }
+        val sortedData = initialDates.zip(weights).sortedBy { it.first }
         val sortedDates = sortedData.map { it.first }
         val sortedWeights = sortedData.map { it.second }
 
+        dates = sortedDates
+
         val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
-        val currentDateIndex = dates.indexOf(currentDate)
+        val currentDateIndex = initialDates.indexOf(currentDate)
+
+        val lastDayIndex = dates.lastIndex
+        val visibleRange = 7f // Adjust as needed
+        val centerX = currentDateIndex.toFloat()
+        lineChart.moveViewToX(centerX - visibleRange / 2f)
 
         val valueToDateMap = mutableMapOf<Float, String>()
         val initialEntries = sortedWeights.takeLast(7)
-        val initialDates = sortedDates.takeLast(7)
 
         for (i in 0 until weights.size) {
             entries.add(Entry(i.toFloat(), weights[i]))
-            valueToDateMap[i.toFloat()] = dates[i]
+            valueToDateMap[i.toFloat()] = initialDates[i]
         }
 
         val dataSet = LineDataSet(entries, "Weight")
@@ -125,9 +157,12 @@ class Progress : AppCompatActivity(){
         lineChart.xAxis.setAxisMinimum(0f)
         lineChart.xAxis.setAxisMaximum(currentDateIndex.toFloat())
         lineChart.xAxis.textSize = 10f
-        lineChart.setVisibleXRangeMaximum(7f)
-        lineChart.moveViewToX(currentDateIndex.toFloat())
+        lineChart.setVisibleXRangeMaximum(visibleRange)
+        lineChart.moveViewToX(lastDayIndex.toFloat())
         lineChart.xAxis.labelRotationAngle = -45f
+
+        val initialVisibleRange = minOf(visibleRange, lastDayIndex.toFloat() + 1) // Ensure at least one day is visible
+        lineChart.moveViewToX(lastDayIndex.toFloat() - initialVisibleRange / 2f + 0.5f)
 
 
         lineChart.description.isEnabled = false
@@ -150,6 +185,27 @@ class Progress : AppCompatActivity(){
 
         dataSet.setDrawFilled(true)
         dataSet.fillDrawable = gradientDrawable
+
+        val arrowTopProg: ImageView = findViewById(R.id.arrowTopProg)
+
+        arrowTopProg.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    // Start dragging
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    // Update arrow position
+                    val x = event.x
+                    val indicatedDate = getDateFromXCoordinate(x) // Calculate indicated date
+                    updateChartData(indicatedDate) // Update chart data
+                }
+                MotionEvent.ACTION_UP -> {
+                    // Stop dragging
+                }
+            }
+            true
+        }
+
 
         lineChart.invalidate()
     }
@@ -230,4 +286,53 @@ class Progress : AppCompatActivity(){
     companion object {
         private const val PICK_IMAGE_REQUEST = 1
     }
+
+    private fun loadProfilePictureForButton() {
+        val file = File(filesDir, "profile_picture.jpg")
+        if (file.exists()) {
+            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            profilePic.setImageBitmap(bitmap)
+        } else {
+
+            profilePic.setImageResource(R.drawable.person)
+        }
+    }
+
+    private fun updateChartData(indicatedDate: String) {
+        // Retrieve data for indicated date
+        val data = dbHelper.getDataForDate(indicatedDate)
+
+        // Format data
+        val weight = data.weight // Assuming your data object has a weight property
+        val bmi = data.weight // zrobic bmi
+
+        // Update text views
+        weightProg.text = "Weight: $weight"
+        progressWeight.text = "Progress from last weight: ..." // Calculate progress
+        progressWeight2.text = "Progress from beginning: ..." // Calculate progress
+        bmiProgress.text = "BMI: $bmi"
+    }
+
+    private fun getDateFromXCoordinate(x: Float): String {
+        // Get the x-axis value corresponding to the touch event's x-coordinate
+        val transformer = lineChart.getTransformer(LEFT)
+
+        val position = floatArrayOf(x, 0f)
+        val values = lineChart.getValuesByTouchPoint(x, 0f, YAxis.AxisDependency.LEFT)
+        val xValue = values.x
+
+        // Find the closest date in your dates list to the x-axis value
+        val closestDateIndex = dates.indexOfFirst {
+            val dateValue = dates.indexOf(it).toFloat()
+            Math.abs(dateValue - xValue) < 0.5f // Adjust the tolerance as needed
+        }
+
+        // Return the date if found, otherwise return an empty string or handle the error
+        return if (closestDateIndex != -1) {
+            dates[closestDateIndex]
+        } else {
+            "" // Or handle the error appropriately
+        }
+    }
+
 }

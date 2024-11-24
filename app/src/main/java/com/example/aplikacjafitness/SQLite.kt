@@ -9,12 +9,17 @@ import androidx.compose.foundation.layout.add
 import androidx.compose.ui.text.intl.Locale
 import java.text.SimpleDateFormat
 import kotlin.text.format
+import kotlin.text.indexOf
+import kotlin.text.indexOfFirst
+import kotlin.text.toFloat
 
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val DATABASE_NAME = "FitnessApp.db"
         private const val DATABASE_VERSION = 8 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
     }
+
+    private val context: Context = context
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE \"users\" (\n" +
@@ -217,6 +222,25 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }
         db.insert("progress_photos", null, values)
     }
+
+    fun getDataForDate(date: String): WeightProgressData {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT weight, pic_name FROM weight_progress WHERE user_id = ? AND date = ?",
+            arrayOf(Utils.getUserIdFromSharedPreferences(context).toString(), date)
+        )
+        var weight = 0f
+        var picName: String? = null
+        if (cursor.moveToFirst()) {
+            weight = cursor.getFloat(cursor.getColumnIndexOrThrow("weight"))
+            picName = cursor.getString(cursor.getColumnIndexOrThrow("pic_name"))
+        }
+        cursor.close()
+        return WeightProgressData(weight, picName)
+    }
+
+    // Define a data class to hold the retrieved data
+    data class WeightProgressData(val weight: Float, val picName: String?)
 
 // Add other database operations here (e.g., update, delete, query)
 }
