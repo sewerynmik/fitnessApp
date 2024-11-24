@@ -4,7 +4,11 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.view.Gravity
+import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.PopupWindow
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.color
 import com.github.mikephil.charting.charts.LineChart
@@ -18,6 +22,7 @@ import com.github.mikephil.charting.utils.ColorTemplate
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
+
 
 class Progress : AppCompatActivity(){
 
@@ -40,6 +45,11 @@ class Progress : AppCompatActivity(){
             startActivity(intent)
         }
 
+        val addButton: ImageButton = findViewById(R.id.addButton)
+        addButton.setOnClickListener {
+            showAddProgressPopup()
+        }
+
     }
 
     private fun setupLineChart() {
@@ -53,7 +63,7 @@ class Progress : AppCompatActivity(){
 
     private fun loadLineChartData() {
         val entries = ArrayList<Entry>()
-        val userId = getUserIdFromSharedPreferences(this)
+        val userId = 1 // zmienic to potem na getUserIdFromSharedPreferences(this)
         val (weights, dates) = dbHelper.getWeightProgress(userId)
 
         for (i in 0 until weights.size) {
@@ -101,6 +111,26 @@ class Progress : AppCompatActivity(){
         lineChart.xAxis.valueFormatter = IndexAxisValueFormatter(dates)
 
         lineChart.invalidate()
+    }
+
+    private fun showAddProgressPopup() {
+        val popupView = layoutInflater.inflate(R.layout.popup_add_progress, null)
+        val popupWindow = PopupWindow(popupView,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            true)
+
+        // Get references to views in the popup
+        val weightInput: EditText = popupView.findViewById(R.id.weightInput)
+        val addPhotoButton: android.widget.Button = popupView.findViewById(R.id.addPhotoButton)
+
+        // Set click listeners for buttons in the popup
+        addPhotoButton.setOnClickListener {
+            // Implement photo picking logic here
+        }
+
+        // Show the popup
+        popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0)
     }
 
 }

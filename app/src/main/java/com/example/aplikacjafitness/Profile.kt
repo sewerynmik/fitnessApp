@@ -1,5 +1,6 @@
 package com.example.aplikacjafitness
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -24,6 +25,16 @@ import java.util.regex.Pattern
 import kotlin.text.toFloatOrNull
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.widget.ImageView
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
+import java.io.File
+import kotlin.io.path.exists
+import android.provider.MediaStore
+import java.io.FileOutputStream
 
 
 class Profile : AppCompatActivity() {
@@ -35,6 +46,8 @@ class Profile : AppCompatActivity() {
     private lateinit var profWeightTextView: TextView
     private lateinit var profHeightTextView: TextView
     private lateinit var profStepGoalTextView: TextView
+    private lateinit var profileImageView: ImageView
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,9 +57,10 @@ class Profile : AppCompatActivity() {
         profEmailTextView = findViewById(R.id.profEmail)
         profNameTextView = findViewById(R.id.profName)
         profSurTextView = findViewById(R.id.profSur)
-        profWeightTextView = findViewById(R.id.profWeight)
         profHeightTextView = findViewById(R.id.profHeight)
         profStepGoalTextView = findViewById(R.id.profStepGoal)
+        profileImageView = findViewById(R.id.profileImageView)
+        loadProfilePicture()
 
         loadData()
 
@@ -71,6 +85,12 @@ class Profile : AppCompatActivity() {
         logOutButton.setOnClickListener {
             showLogoutConfirmationDialog()
         }
+
+        profileImageView.setOnClickListener {
+            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            pickImageLauncher.launch(intent)
+        }
+
     }
 
     private fun loadData() {
@@ -86,7 +106,6 @@ class Profile : AppCompatActivity() {
             profEmailTextView.text = savedEmail
             profNameTextView.text = cursor.getString(0)
             profSurTextView.text = cursor.getString(1)
-            profWeightTextView.text = cursor.getDouble(2).toString()
             profHeightTextView.text = cursor.getDouble(3).toString()
             profStepGoalTextView.text = cursor.getInt(4).toString()
         } else {
@@ -219,6 +238,16 @@ class Profile : AppCompatActivity() {
         val dialog = builder.create()
         dialog.show()
     }
+
+    private fun loadProfilePicture() {
+        val file = File(filesDir, "profile_picture.jpg") // Adjust file name and path as needed
+        if (file.exists()) {
+            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            profileImageView.setImageBitmap(bitmap)
+        } else {
+            // Set a default image if no profile picture is found
+            profileImageView.setImageResource(R.drawable.logo) // Replace with your default image
+        }
 }
 
 class HeightInputFilter : InputFilter {
@@ -268,4 +297,41 @@ fun getUserIdFromSharedPreferences(context: Context): Int {
     cursor.close()
     return userId
 }
+
+
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data: Intent? = result.data
+            val imageUri: Uri? = data?.data
+            if (imageUri != null) {
+                try {
+                    val inputStream = contentResolver.openInputStream(imageUri)
+                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                    inputStream?.close()
+
+                    val file = File(filesDir, "profile_picture.jpg") // Adjust file name and path as needed
+                    val outputStream = FileOutputStream(file)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                    outputStream.flush()
+                    outputStream.close()
+
+                    // Update the ImageView
+                    profileImageView.setImageBitmap(bitmap)
+
+                    Toast.makeText(this, "Profile picture saved", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(this, "Error saving profile picture", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+
+
+
+}
+
+
+
 

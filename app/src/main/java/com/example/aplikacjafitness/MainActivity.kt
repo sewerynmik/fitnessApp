@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
+import android.graphics.BitmapFactory
 import android.graphics.drawable.GradientDrawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -44,6 +45,9 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
 import android.graphics.Color
 import androidx.core.text.color
+import de.hdodenhof.circleimageview.CircleImageView
+import java.io.File
+import kotlin.io.path.exists
 
 
 class MainActivity : ComponentActivity(), SensorEventListener {
@@ -74,6 +78,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     private var lastSensorTimestamp = 0L
     private val debounceTime = 500L
+
+    private lateinit var profileBtn: CircleImageView
 
     private lateinit var lineChart: LineChart
 
@@ -182,9 +188,9 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             }
         }
 
-        val ProfileButton: ImageButton = findViewById(R.id.profileBtn)
-
-        ProfileButton.setOnClickListener {
+        profileBtn = findViewById(R.id.profileBtn)
+        loadProfilePictureForButton()
+        profileBtn.setOnClickListener {
             val intent = Intent(this, Profile::class.java)
             startActivity(intent)
         }
@@ -355,5 +361,15 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         lineChart.invalidate()
     }
 
+    private fun loadProfilePictureForButton() {
+        val file = File(filesDir, "profile_picture.jpg") // Adjust file name and path as needed
+        if (file.exists()) {
+            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            profileBtn.setImageBitmap(bitmap) // Assuming profileBtn is your ImageButton
+        } else {
+            // Set a default image if no profile picture is found
+            profileBtn.setImageResource(R.drawable.person) // Replace with your default image
+        }
+    }
 
 }

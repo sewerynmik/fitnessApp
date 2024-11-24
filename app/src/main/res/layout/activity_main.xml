@@ -19,16 +19,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageButton
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/profileBtn"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_gravity="right"
-            android:background="@drawable/baseline_person_24"
-            android:backgroundTint="#000000"
-            android:contentDescription="profile"
-            app:srcCompat="@drawable/person"
-            tools:srcCompat="@drawable/person" />
+            android:scaleType="centerCrop" />
+
 
         <TextView
             android:id="@+id/NameAndSurrView"

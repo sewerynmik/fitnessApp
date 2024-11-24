@@ -22,13 +22,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
-            android:id="@+id/profileLogo"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_gravity="center_horizontal"
-            android:foregroundGravity="center"
-            app:srcCompat="@drawable/logo" />
+        <de.hdodenhof.circleimageview.CircleImageView
+    android:id="@+id/profileImageView"
+    android:layout_width="100dp"
+    android:layout_height="100dp"
+    android:layout_gravity="center_horizontal"
+    android:foregroundGravity="center"
+    android:src="@drawable/logo" />
 
         <EditText
             android:id="@+id/profEmail"
@@ -64,18 +64,6 @@
             android:ems="10"
             android:gravity="center_horizontal"
             android:hint="No Surname Provided"
-            android:minHeight="48dp" />
-
-        <EditText
-            android:id="@+id/profWeight"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal|center_vertical"
-            android:layout_marginTop="65dp"
-            android:editable="false"
-            android:ems="10"
-            android:gravity="center_horizontal"
-            android:hint="No Weight Provided"
             android:minHeight="48dp" />
 
         <EditText
