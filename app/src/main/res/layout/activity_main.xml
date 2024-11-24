@@ -19,24 +19,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <ImageButton
+            android:id="@+id/profileBtn"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="right"
+            android:background="@drawable/baseline_person_24"
+            android:backgroundTint="#000000"
+            android:contentDescription="profile"
+            app:srcCompat="@drawable/person"
+            tools:srcCompat="@drawable/person" />
+
         <TextView
             android:id="@+id/NameAndSurrView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="right"
             android:layout_marginTop="15dp"
-            android:layout_marginRight="48dp"
+            android:layout_marginRight="50dp"
             android:fontFamily="@font/anonymous_pro_bold"
             android:textColor="#FFFFFF" />
 
-        <ImageView
-            android:id="@+id/Person"
-            android:layout_width="48dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="right"
-            android:clickable="true"
-            android:contentDescription="profile"
-            android:src="@drawable/baseline_person_24" />
     </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
@@ -145,7 +148,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="10dp"
-        app:cardBackgroundColor="@color/blue"
+        app:cardBackgroundColor="#FFFFFF"
         app:cardCornerRadius="16dp"
         app:layout_constraintBottom_toTopOf="@id/thCard"
         app:layout_constraintEnd_toEndOf="parent"
@@ -153,12 +156,12 @@
         app:layout_constraintTop_toBottomOf="@id/fiCard"
         app:layout_constraintVertical_weight="1">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="Niebieskie pole"
-            android:textColor="#DB0F0F" />
+        <!-- BarChart inside secCard -->
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/lineChart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="10dp" />
 
     </androidx.cardview.widget.CardView>
 
@@ -221,15 +224,14 @@
             app:srcCompat="@drawable/workout" />
 
         <ImageButton
-            android:id="@+id/profileBtn"
+            android:id="@+id/progressBtn"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_gravity="right"
-            android:background="@drawable/baseline_person_24"
+            android:background="@drawable/progress"
             android:backgroundTint="#000000"
             android:contentDescription="profile"
-            app:srcCompat="@drawable/person"
-            tools:srcCompat="@drawable/person" />
+            app:srcCompat="@drawable/progress" />
     </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

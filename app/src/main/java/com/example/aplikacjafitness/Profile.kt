@@ -2,7 +2,6 @@ package com.example.aplikacjafitness
 
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.InputFilter
@@ -23,6 +22,9 @@ import androidx.compose.ui.semantics.setText
 import androidx.core.content.edit
 import java.util.regex.Pattern
 import kotlin.text.toFloatOrNull
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
+
 
 class Profile : AppCompatActivity() {
 
@@ -59,6 +61,12 @@ class Profile : AppCompatActivity() {
             startActivity(intent)
         }
 
+        val progressButton: ImageButton = findViewById(R.id.progressBtn)
+        progressButton.setOnClickListener {
+            val intent = Intent(this, Progress::class.java)
+            startActivity(intent)
+        }
+
         val logOutButton: TextView = findViewById(R.id.logOut)
         logOutButton.setOnClickListener {
             showLogoutConfirmationDialog()
@@ -66,12 +74,24 @@ class Profile : AppCompatActivity() {
     }
 
     private fun loadData() {
-        profEmailTextView.text = sharedPreferences.getString("EMAIL", "")
-        profNameTextView.text = sharedPreferences.getString("NAME", "")
-        profSurTextView.text = sharedPreferences.getString("SURNAME", "")
-        profWeightTextView.text = sharedPreferences.getFloat("WEIGHT", 2F).toString()
-        profHeightTextView.text = sharedPreferences.getFloat("HEIGHT", 2F).toString()
-        profStepGoalTextView.text = sharedPreferences.getString("DAILY_STEP_GOAL", "6000")
+        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val savedEmail = sharedPreferences.getString("EMAIL", "")
+
+        val dbHelper = DatabaseHelper(this)
+        val cursor = dbHelper.readableDatabase.rawQuery(
+            "SELECT name, surname, weight, height, daily_steps_target FROM users WHERE email = ?",
+            arrayOf(savedEmail)
+        )
+        if (cursor.moveToFirst()) {
+            profEmailTextView.text = savedEmail
+            profNameTextView.text = cursor.getString(0)
+            profSurTextView.text = cursor.getString(1)
+            profWeightTextView.text = cursor.getDouble(2).toString()
+            profHeightTextView.text = cursor.getDouble(3).toString()
+            profStepGoalTextView.text = cursor.getInt(4).toString()
+        } else {
+            Toast.makeText(this, "User not found in database", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun showEditProfilePopup() {
@@ -91,12 +111,18 @@ class Profile : AppCompatActivity() {
         nameEditText.filters = arrayOf(InputFilter.LengthFilter(20), NameInputFilter())
         surnameEditText.filters = arrayOf(InputFilter.LengthFilter(20), NameInputFilter())
 
-        nameEditText.setText(sharedPreferences.getString("NAME", ""))
-        surnameEditText.setText(sharedPreferences.getString("SURNAME", ""))
-        weightEditText.setText(sharedPreferences.getFloat("WEIGHT", 0f).toString())
-        heightEditText.setText(sharedPreferences.getFloat("HEIGHT", 1f).toString())
-        val dailyStepGoalString = sharedPreferences.getString("DAILY_STEP_GOAL", "6000")
-        stepsEditText.setText(dailyStepGoalString)
+        val dbHelper = DatabaseHelper(this)
+        val db = dbHelper.readableDatabase
+        val userId = getUserIdFromSharedPreferences(this)
+        val cursor = db.rawQuery("SELECT name, surname, weight, height, daily_steps_target FROM users WHERE id = ?", arrayOf(userId.toString()))
+        if (cursor.moveToFirst()) {
+            nameEditText.setText(cursor.getString(0))
+            surnameEditText.setText(cursor.getString(1))
+            weightEditText.setText(cursor.getFloat(2).toString())
+            heightEditText.setText(cursor.getFloat(3).toString())
+            stepsEditText.setText(cursor.getInt(4).toString())
+        }
+        cursor.close()
 
         val builder = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -113,7 +139,7 @@ class Profile : AppCompatActivity() {
                 }
 
                 if (surnameEditText.text.toString().length < 3) {
-                    errorMessage.add( "Surname is too short, it has to be at least 3 letters.\n")
+                    errorMessage.add("Surname is too short, it has to be at least 3 letters.\n")
                     isValid = false
                 } else {
                     surnameEditText.error = null
@@ -127,42 +153,39 @@ class Profile : AppCompatActivity() {
                     heightEditText.error = null
                 }
 
-                if(isValid){
+                if (isValid) {
+                    val name = nameEditText.text.toString()
+                    val surname = surnameEditText.text.toString()
+                    val weight = weightEditText.text.toString().toFloatOrNull()
+                    val height = heightEditText.text.toString().toFloatOrNull()
+                    val steps = stepsEditText.text.toString().toIntOrNull()
+
                     sharedPreferences.edit {
-                        val name = nameEditText.text.toString()
                         if (name.isNotEmpty()) {
                             putString("NAME", name)
                         }
-
-                        val surname = surnameEditText.text.toString()
                         if (surname.isNotEmpty()) {
                             putString("SURNAME", surname)
                         }
-
-                        val weight = weightEditText.text.toString().toFloatOrNull()
                         if (weight != null) {
                             putFloat("WEIGHT", weight)
                         }
-
-                        val height = heightEditText.text.toString().toFloatOrNull()
                         if (height != null) {
                             putFloat("HEIGHT", height)
                         }
-
-                        val steps = stepsEditText.text.toString().toIntOrNull()
                         if (steps != null) {
                             putString("DAILY_STEP_GOAL", steps.toString())
                         }
-
                         apply()
                     }
 
+                    dbHelper.updateUserData(db, userId, name, surname, weight, height, steps)
+
                     loadData()
                     dialog.dismiss()
-                }
-                if(!isValid){
-                    val errorMessage = errorMessage.joinToString("\n")
-                    Toast.makeText(this@Profile, errorMessage, Toast.LENGTH_SHORT).show()
+                } else {
+                    val errorMessageString = errorMessage.joinToString("\n")
+                    Toast.makeText(this@Profile, errorMessageString, Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel") { dialog, _ ->
@@ -232,3 +255,17 @@ class WeightInputFilter : InputFilter {
         }
     }
 }
+
+fun getUserIdFromSharedPreferences(context: Context): Int {
+    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+    val savedEmail = sharedPreferences.getString("EMAIL", "")
+    val dbHelper = DatabaseHelper(context)
+    val cursor = dbHelper.readableDatabase.rawQuery("SELECT id FROM users WHERE email = ?", arrayOf(savedEmail))
+    var userId = -1
+    if (cursor.moveToFirst()) {
+        userId = cursor.getInt(0)
+    }
+    cursor.close()
+    return userId
+}
+
