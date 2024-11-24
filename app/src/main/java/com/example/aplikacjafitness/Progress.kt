@@ -19,6 +19,8 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.tooling.data.position
+import androidx.core.text.color
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis
@@ -37,9 +39,14 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.text.toFloatOrNull
 import com.github.mikephil.charting.components.YAxis.AxisDependency.LEFT
+import com.github.mikephil.charting.data.DataSet
+import com.github.mikephil.charting.highlight.Highlight
+import com.github.mikephil.charting.listener.ChartTouchListener
+import com.github.mikephil.charting.listener.OnChartGestureListener
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 
 
-class Progress : AppCompatActivity(){
+class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
     private lateinit var lineChart: LineChart
     private lateinit var dbHelper: DatabaseHelper
@@ -52,6 +59,8 @@ class Progress : AppCompatActivity(){
     private lateinit var progressWeight: TextView
     private lateinit var progressWeight2: TextView
     private lateinit var bmiProgress: TextView
+
+    private lateinit var arrowTopProg: ImageView
 
     private var dates: List<String> = emptyList()
 
@@ -68,11 +77,15 @@ class Progress : AppCompatActivity(){
         progressWeight = findViewById(R.id.progressWeight)
         progressWeight2 = findViewById(R.id.progressWeight2)
         bmiProgress = findViewById(R.id.bmiProgress)
+        arrowTopProg = findViewById(R.id.arrowTopProg)
 
         dbHelper = DatabaseHelper(this)
         lineChart = findViewById(R.id.lineChartProgress)
         setupLineChart()
         loadLineChartData()
+
+
+        lineChart.setOnChartValueSelectedListener(this)
 
         val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
         updateChartData(currentDate)
@@ -92,11 +105,36 @@ class Progress : AppCompatActivity(){
 
     private fun setupLineChart() {
         lineChart.description.isEnabled = false
-        lineChart.setTouchEnabled(true)
-        lineChart.setDragEnabled(true)
-        lineChart.setScaleEnabled(true)
-        lineChart.setPinchZoom(true)
-        lineChart.setDrawGridBackground(false)
+        lineChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        lineChart.xAxis.setDrawGridLines(false)
+        lineChart.xAxis.granularity = 1f
+        lineChart.xAxis.labelRotationAngle = -45f
+        lineChart.axisLeft.isEnabled = false
+        lineChart.axisRight.isEnabled = false
+        lineChart.legend.isEnabled = false
+        lineChart.setHighlightPerTapEnabled(false)
+        lineChart.setHighlightPerDragEnabled(false)
+        lineChart.setOnChartValueSelectedListener(null)
+        lineChart.setScaleEnabled(false)
+        lineChart.setPinchZoom(false)
+
+        lineChart.setOnChartGestureListener(object : OnChartGestureListener {
+            override fun onChartGestureStart(me: MotionEvent?, lastPerformedGesture: ChartTouchListener.ChartGesture?) {}
+            override fun onChartGestureEnd(me: MotionEvent?, lastPerformedGesture: ChartTouchListener.ChartGesture?) {
+                snapToNearestDot()
+            }
+
+            override fun onChartLongPressed(me: MotionEvent?) {}
+            override fun onChartDoubleTapped(me: MotionEvent?) {}
+            override fun onChartSingleTapped(me: MotionEvent?) {}
+
+            override fun onChartFling(me1: MotionEvent?, me2: MotionEvent?, velocityX: Float, velocityY: Float) {}
+
+            override fun onChartScale(me: MotionEvent?, scaleX: Float, scaleY: Float) {}
+            override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
+                updateDataOnScroll()
+            }
+        })
     }
 
     private fun loadLineChartData() {
@@ -104,26 +142,15 @@ class Progress : AppCompatActivity(){
         val userId = Utils.getUserIdFromSharedPreferences(this)
         val (weights, initialDates) = dbHelper.getWeightProgress(userId)
 
-        val sortedData = initialDates.zip(weights).sortedBy { it.first }
+        dates = initialDates.sorted()
+        val sortedData = dates.zip(weights).sortedBy { it.first }
         val sortedDates = sortedData.map { it.first }
         val sortedWeights = sortedData.map { it.second }
 
-        dates = sortedDates
-
-        val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
-        val currentDateIndex = initialDates.indexOf(currentDate)
-
-        val lastDayIndex = dates.lastIndex
-        val visibleRange = 7f // Adjust as needed
-        val centerX = currentDateIndex.toFloat()
-        lineChart.moveViewToX(centerX - visibleRange / 2f)
-
         val valueToDateMap = mutableMapOf<Float, String>()
-        val initialEntries = sortedWeights.takeLast(7)
-
-        for (i in 0 until weights.size) {
-            entries.add(Entry(i.toFloat(), weights[i]))
-            valueToDateMap[i.toFloat()] = initialDates[i]
+        for (i in sortedWeights.indices) {
+            entries.add(Entry(i.toFloat(), sortedWeights[i]))
+            valueToDateMap[i.toFloat()] = sortedDates[i]
         }
 
         val dataSet = LineDataSet(entries, "Weight")
@@ -131,84 +158,45 @@ class Progress : AppCompatActivity(){
         dataSet.circleRadius = 5f
         dataSet.circleColors = listOf(Color.GREEN)
         dataSet.setDrawCircles(true)
-
-
-        val dataSets = ArrayList<ILineDataSet>()
-        dataSets.add(dataSet)
-
-        val data = LineData(dataSets)
-        lineChart.data = data
-
-        lineChart.xAxis.valueFormatter = object : ValueFormatter() {
-            override fun getFormattedValue(value: Float): String {
-                val dateString = valueToDateMap[value]
-                if (dateString != null) {
-                    val date = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).parse(dateString)
-                    return SimpleDateFormat("dd-MM", Locale.getDefault()).format(date)
-                }
-                return ""
-            }
-        }
-
-        lineChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
-        lineChart.xAxis.granularity = 1f
-        lineChart.xAxis.setDrawLabels(true)
-        lineChart.xAxis.setDrawGridLines(false)
-        lineChart.xAxis.setAxisMinimum(0f)
-        lineChart.xAxis.setAxisMaximum(currentDateIndex.toFloat())
-        lineChart.xAxis.textSize = 10f
-        lineChart.setVisibleXRangeMaximum(visibleRange)
-        lineChart.moveViewToX(lastDayIndex.toFloat())
-        lineChart.xAxis.labelRotationAngle = -45f
-
-        val initialVisibleRange = minOf(visibleRange, lastDayIndex.toFloat() + 1) // Ensure at least one day is visible
-        lineChart.moveViewToX(lastDayIndex.toFloat() - initialVisibleRange / 2f + 0.5f)
-
-
-        lineChart.description.isEnabled = false
-        lineChart.legend.isEnabled = false
-        lineChart.axisLeft.isEnabled = false
-        lineChart.axisRight.isEnabled = false
-        lineChart.setScaleEnabled(false)
-        lineChart.setPinchZoom(false)
-        lineChart.setHighlightPerTapEnabled(false)
-
-        dataSet.setColors(*ColorTemplate.MATERIAL_COLORS)
         dataSet.setDrawValues(false)
-        dataSet.setDrawCircles(true)
         dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
 
         val gradientDrawable = GradientDrawable(
             GradientDrawable.Orientation.TOP_BOTTOM,
             intArrayOf(Color.argb(255, 0, 255, 0), Color.argb(0, 0, 255, 0))
         )
-
         dataSet.setDrawFilled(true)
         dataSet.fillDrawable = gradientDrawable
 
-        val arrowTopProg: ImageView = findViewById(R.id.arrowTopProg)
+        val lineData = LineData(dataSet)
+        lineChart.data = lineData
 
-        arrowTopProg.setOnTouchListener { v, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    // Start dragging
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    // Update arrow position
-                    val x = event.x
-                    val indicatedDate = getDateFromXCoordinate(x) // Calculate indicated date
-                    updateChartData(indicatedDate) // Update chart data
-                }
-                MotionEvent.ACTION_UP -> {
-                    // Stop dragging
-                }
+        val extraSpace = 3.5f
+        lineChart.xAxis.setAxisMinimum(-extraSpace)
+        lineChart.xAxis.setAxisMaximum(entries.size.toFloat() + extraSpace - 1f)
+
+        lineChart.xAxis.valueFormatter = object : ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                return valueToDateMap[value] ?: ""
             }
-            true
         }
 
+        val todayIndex = sortedDates.indexOf(
+            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
+        )
+
+        if (todayIndex != -1) {
+            lineChart.setVisibleXRangeMaximum(7f)
+            lineChart.moveViewToX(todayIndex.toFloat())
+            updateChartData(sortedDates[todayIndex], sortedWeights[todayIndex])
+        } else {
+            lineChart.moveViewToX(entries.size.toFloat() / 2f)
+        }
 
         lineChart.invalidate()
     }
+
+
 
     private fun showAddProgressPopup() {
         val popupView = layoutInflater.inflate(R.layout.popup_add_progress, null)
@@ -299,40 +287,71 @@ class Progress : AppCompatActivity(){
     }
 
     private fun updateChartData(indicatedDate: String) {
-        // Retrieve data for indicated date
+
         val data = dbHelper.getDataForDate(indicatedDate)
 
-        // Format data
-        val weight = data.weight // Assuming your data object has a weight property
-        val bmi = data.weight // zrobic bmi
+        val weight = data.weight
+        val bmi = data.weight
 
-        // Update text views
         weightProg.text = "Weight: $weight"
-        progressWeight.text = "Progress from last weight: ..." // Calculate progress
-        progressWeight2.text = "Progress from beginning: ..." // Calculate progress
+        progressWeight.text = "Progress from last weight: ..." // liczyc progress
+        progressWeight2.text = "Progress from beginning: ..." // liczyc progress
         bmiProgress.text = "BMI: $bmi"
     }
 
-    private fun getDateFromXCoordinate(x: Float): String {
-        // Get the x-axis value corresponding to the touch event's x-coordinate
+    override fun onValueSelected(e: Entry, h: Highlight) {
+
+        val x = e.x
         val transformer = lineChart.getTransformer(LEFT)
+        val arrowX = transformer.getPixelForValues(x, 0f).x
+        arrowTopProg.x = arrowX.toFloat() - arrowTopProg.width / 2f
 
-        val position = floatArrayOf(x, 0f)
-        val values = lineChart.getValuesByTouchPoint(x, 0f, YAxis.AxisDependency.LEFT)
-        val xValue = values.x
+        val indicatedDate = dates[x.toInt()]
+        updateChartData(indicatedDate)
+    }
 
-        // Find the closest date in your dates list to the x-axis value
-        val closestDateIndex = dates.indexOfFirst {
-            val dateValue = dates.indexOf(it).toFloat()
-            Math.abs(dateValue - xValue) < 0.5f // Adjust the tolerance as needed
-        }
+    override fun onNothingSelected() {
+        TODO("Not yet implemented")//tu nic ma nie byc :)
+    }
 
-        // Return the date if found, otherwise return an empty string or handle the error
-        return if (closestDateIndex != -1) {
-            dates[closestDateIndex]
-        } else {
-            "" // Or handle the error appropriately
+    private fun updateDataOnScroll() {
+        val visibleXRange = lineChart.visibleXRange
+        val centerX = (lineChart.lowestVisibleX + lineChart.highestVisibleX) / 2f
+
+        val closestEntry = lineChart.data.getDataSetByIndex(0)
+            ?.getEntryForXValue(centerX, Float.NaN, DataSet.Rounding.CLOSEST)
+
+        if (closestEntry != null) {
+            val dateIndex = closestEntry.x.toInt()
+            if (dateIndex in dates.indices) {
+                val date = dates[dateIndex]
+                val weight = closestEntry.y
+                updateChartData(date, weight)
+            }
         }
     }
+
+    private fun updateChartData(date: String, weight: Float) {
+        weightProg.text = "$weight kg"
+        bmiProgress.text = "BMI: $date"
+    }
+
+    private fun snapToNearestDot() {
+        val currentViewCenter = lineChart.lowestVisibleX + (lineChart.highestVisibleX - lineChart.lowestVisibleX) / 2f
+
+        val closestEntryIndex = dates.indices.minByOrNull { index ->
+            Math.abs(index - currentViewCenter)
+        }
+
+        closestEntryIndex?.let { index ->
+            lineChart.centerViewToAnimated(
+                index.toFloat(),
+                0f,
+                YAxis.AxisDependency.LEFT,
+                300
+            )
+        }
+    }
+
 
 }

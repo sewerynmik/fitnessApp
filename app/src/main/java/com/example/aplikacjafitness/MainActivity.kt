@@ -144,7 +144,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         cursor.close()
 
 
-
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
         isSensorAvailable = sensor != null
 

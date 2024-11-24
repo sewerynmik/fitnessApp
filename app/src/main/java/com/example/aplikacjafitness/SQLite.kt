@@ -239,7 +239,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return WeightProgressData(weight, picName)
     }
 
-    // Define a data class to hold the retrieved data
     data class WeightProgressData(val weight: Float, val picName: String?)
 
 // Add other database operations here (e.g., update, delete, query)
