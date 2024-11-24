@@ -42,6 +42,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 "\t\"weight\"\tNUMERIC,\n" +
                 "\t\"date\"\tTEXT,\n" +
                 "\t\"user_id\"\tINTEGER,\n" +
+                "\t\"pic_name\"\tTEXT,\n" +
                 "\tCONSTRAINT \"weight_users\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\")\n" +
                 ");")
 
@@ -55,9 +56,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('18-11-2024', 1927, 1)")
         db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('17-11-2024', 2534, 1)")
 
-        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (88.5, '22-11-2024', 1)")
-        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (85, '20-11-2024', 1)")
-        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (72, '15-11-2024', 1)")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (88.5, '22-11-2024', 1,'blabla')")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (85, '20-11-2024', 1,'blabla')")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (72, '15-11-2024', 1,'blabla')")
     }
 
 
@@ -197,6 +198,25 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return Pair(weights, dates)
     }
 
+    fun insertWeightProgress(userId: Int, date: String, weight: Float, picName: String? = null) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("user_id", userId)
+            put("date", date)
+            put("weight", weight)
+            put("pic_name", picName)
+        }
+        db.insert("weight_progress", null, values)
+    }
+
+    fun insertProgressPhoto(userId: Int, filename: String) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("user_id", userId)
+            put("filename", filename)
+        }
+        db.insert("progress_photos", null, values)
+    }
 
 // Add other database operations here (e.g., update, delete, query)
 }
