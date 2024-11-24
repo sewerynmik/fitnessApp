@@ -27,8 +27,7 @@ android:orientation="vertical">
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="20dp"
-            android:text="here i want weight from current show on chart"
+            android:layout_marginTop="30dp"
             android:textSize="24sp" />
 
         <TextView
@@ -36,7 +35,7 @@ android:orientation="vertical">
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="65dp"
+            android:layout_marginTop="75dp"
             android:text="Bmi"
             android:textSize="14sp" />
 
@@ -46,7 +45,7 @@ android:orientation="vertical">
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="5dp"
-            android:text="Bmi"
+            android:text="date"
             android:textSize="10sp" />
 
         <com.github.mikephil.charting.charts.LineChart

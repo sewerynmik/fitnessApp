@@ -59,6 +59,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
     private lateinit var progressWeight: TextView
     private lateinit var progressWeight2: TextView
     private lateinit var bmiProgress: TextView
+    private lateinit var dateProgress: TextView
 
     private lateinit var arrowTopProg: ImageView
 
@@ -77,6 +78,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         progressWeight = findViewById(R.id.progressWeight)
         progressWeight2 = findViewById(R.id.progressWeight2)
         bmiProgress = findViewById(R.id.bmiProgress)
+        dateProgress = findViewById(R.id.dateProgress)
         arrowTopProg = findViewById(R.id.arrowTopProg)
 
         dbHelper = DatabaseHelper(this)
@@ -293,10 +295,10 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         val weight = data.weight
         val bmi = data.weight
 
-        weightProg.text = "Weight: $weight"
+        weightProg.text = "$weight kg"
         progressWeight.text = "Progress from last weight: ..." // liczyc progress
         progressWeight2.text = "Progress from beginning: ..." // liczyc progress
-        bmiProgress.text = "BMI: $bmi"
+        bmiProgress.text = "$bmi"
     }
 
     override fun onValueSelected(e: Entry, h: Highlight) {
@@ -333,7 +335,8 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
     private fun updateChartData(date: String, weight: Float) {
         weightProg.text = "$weight kg"
-        bmiProgress.text = "BMI: $date"
+        dateProgress.text = "$date"
+        bmiProgress.text = "bmi"
     }
 
     private fun snapToNearestDot() {
