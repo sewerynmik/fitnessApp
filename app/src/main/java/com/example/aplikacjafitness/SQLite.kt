@@ -56,9 +56,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('18-11-2024', 1927, 1)")
         db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('17-11-2024', 2534, 1)")
 
-        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (88.5, '22-11-2024', 1,'blabla')")
-        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (85, '20-11-2024', 1,'blabla')")
-        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (72, '15-11-2024', 1,'blabla')")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (88.5, '22-11-2024', 1)")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (85, '20-11-2024', 1)")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (72, '15-11-2024', 1)")
     }
 
 
@@ -183,19 +183,19 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     }
 
     fun getWeightProgress(userId: Int): Pair<List<Float>, List<String>> {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT weight, date FROM weight_progress WHERE user_id = ? ORDER BY date ASC",
+            arrayOf(userId.toString())
+        )
         val weights = mutableListOf<Float>()
         val dates = mutableListOf<String>()
-        val db = this.readableDatabase
-        val cursor = db.rawQuery("SELECT weight, date FROM weight_progress WHERE user_id = ?", arrayOf(userId.toString()))
-
         while (cursor.moveToNext()) {
-            weights.add(cursor.getFloat(0))
-            dates.add(cursor.getString(1))
+            weights.add(cursor.getFloat(cursor.getColumnIndexOrThrow("weight")))
+            dates.add(cursor.getString(cursor.getColumnIndexOrThrow("date")))
         }
-
         cursor.close()
-
-        return Pair(weights, dates)
+        return weights to dates
     }
 
     fun insertWeightProgress(userId: Int, date: String, weight: Float, picName: String? = null) {

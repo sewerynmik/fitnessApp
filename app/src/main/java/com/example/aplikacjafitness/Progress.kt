@@ -23,6 +23,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
 import java.io.File
@@ -77,8 +78,20 @@ class Progress : AppCompatActivity(){
         val userId = Utils.getUserIdFromSharedPreferences(this)
         val (weights, dates) = dbHelper.getWeightProgress(userId)
 
+        val sortedData = dates.zip(weights).sortedBy { it.first }
+        val sortedDates = sortedData.map { it.first }
+        val sortedWeights = sortedData.map { it.second }
+
+        val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
+        val currentDateIndex = dates.indexOf(currentDate)
+
+        val valueToDateMap = mutableMapOf<Float, String>()
+        val initialEntries = sortedWeights.takeLast(7)
+        val initialDates = sortedDates.takeLast(7)
+
         for (i in 0 until weights.size) {
             entries.add(Entry(i.toFloat(), weights[i]))
+            valueToDateMap[i.toFloat()] = dates[i]
         }
 
         val dataSet = LineDataSet(entries, "Weight")
@@ -94,10 +107,28 @@ class Progress : AppCompatActivity(){
         val data = LineData(dataSets)
         lineChart.data = data
 
+        lineChart.xAxis.valueFormatter = object : ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                val dateString = valueToDateMap[value]
+                if (dateString != null) {
+                    val date = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).parse(dateString)
+                    return SimpleDateFormat("dd-MM", Locale.getDefault()).format(date)
+                }
+                return ""
+            }
+        }
+
         lineChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
         lineChart.xAxis.granularity = 1f
         lineChart.xAxis.setDrawLabels(true)
         lineChart.xAxis.setDrawGridLines(false)
+        lineChart.xAxis.setAxisMinimum(0f)
+        lineChart.xAxis.setAxisMaximum(currentDateIndex.toFloat())
+        lineChart.xAxis.textSize = 10f
+        lineChart.setVisibleXRangeMaximum(7f)
+        lineChart.moveViewToX(currentDateIndex.toFloat())
+        lineChart.xAxis.labelRotationAngle = -45f
+
 
         lineChart.description.isEnabled = false
         lineChart.legend.isEnabled = false
@@ -105,10 +136,11 @@ class Progress : AppCompatActivity(){
         lineChart.axisRight.isEnabled = false
         lineChart.setScaleEnabled(false)
         lineChart.setPinchZoom(false)
+        lineChart.setHighlightPerTapEnabled(false)
 
         dataSet.setColors(*ColorTemplate.MATERIAL_COLORS)
         dataSet.setDrawValues(false)
-        dataSet.setDrawCircles(false)
+        dataSet.setDrawCircles(true)
         dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
 
         val gradientDrawable = GradientDrawable(
@@ -118,8 +150,6 @@ class Progress : AppCompatActivity(){
 
         dataSet.setDrawFilled(true)
         dataSet.fillDrawable = gradientDrawable
-
-        lineChart.xAxis.valueFormatter = IndexAxisValueFormatter(dates)
 
         lineChart.invalidate()
     }
@@ -160,6 +190,8 @@ class Progress : AppCompatActivity(){
         }
 
         popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0)
+
+        loadLineChartData()
     }
 
 
