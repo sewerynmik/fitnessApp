@@ -9,12 +9,17 @@ import androidx.compose.foundation.layout.add
 import androidx.compose.ui.text.intl.Locale
 import java.text.SimpleDateFormat
 import kotlin.text.format
+import kotlin.text.indexOf
+import kotlin.text.indexOfFirst
+import kotlin.text.toFloat
 
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val DATABASE_NAME = "FitnessApp.db"
         private const val DATABASE_VERSION = 8 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
     }
+
+    private val context: Context = context
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE \"users\" (\n" +
@@ -42,6 +47,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 "\t\"weight\"\tNUMERIC,\n" +
                 "\t\"date\"\tTEXT,\n" +
                 "\t\"user_id\"\tINTEGER,\n" +
+                "\t\"pic_name\"\tTEXT,\n" +
                 "\tCONSTRAINT \"weight_users\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\")\n" +
                 ");")
 
@@ -182,21 +188,58 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     }
 
     fun getWeightProgress(userId: Int): Pair<List<Float>, List<String>> {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT weight, date FROM weight_progress WHERE user_id = ? ORDER BY date ASC",
+            arrayOf(userId.toString())
+        )
         val weights = mutableListOf<Float>()
         val dates = mutableListOf<String>()
-        val db = this.readableDatabase
-        val cursor = db.rawQuery("SELECT weight, date FROM weight_progress WHERE user_id = ?", arrayOf(userId.toString()))
-
         while (cursor.moveToNext()) {
-            weights.add(cursor.getFloat(0))
-            dates.add(cursor.getString(1))
+            weights.add(cursor.getFloat(cursor.getColumnIndexOrThrow("weight")))
+            dates.add(cursor.getString(cursor.getColumnIndexOrThrow("date")))
         }
-
         cursor.close()
-
-        return Pair(weights, dates)
+        return weights to dates
     }
 
+    fun insertWeightProgress(userId: Int, date: String, weight: Float, picName: String? = null) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("user_id", userId)
+            put("date", date)
+            put("weight", weight)
+            put("pic_name", picName)
+        }
+        db.insert("weight_progress", null, values)
+    }
+
+    fun insertProgressPhoto(userId: Int, filename: String) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("user_id", userId)
+            put("filename", filename)
+        }
+        db.insert("progress_photos", null, values)
+    }
+
+    fun getDataForDate(date: String): WeightProgressData {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT weight, pic_name FROM weight_progress WHERE user_id = ? AND date = ?",
+            arrayOf(Utils.getUserIdFromSharedPreferences(context).toString(), date)
+        )
+        var weight = 0f
+        var picName: String? = null
+        if (cursor.moveToFirst()) {
+            weight = cursor.getFloat(cursor.getColumnIndexOrThrow("weight"))
+            picName = cursor.getString(cursor.getColumnIndexOrThrow("pic_name"))
+        }
+        cursor.close()
+        return WeightProgressData(weight, picName)
+    }
+
+    data class WeightProgressData(val weight: Float, val picName: String?)
 
 // Add other database operations here (e.g., update, delete, query)
 }
