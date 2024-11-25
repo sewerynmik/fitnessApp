@@ -241,5 +241,32 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     data class WeightProgressData(val weight: Float, val picName: String?)
 
-// Add other database operations here (e.g., update, delete, query)
+    fun getUserData(userId: Int): UserData {
+        val db = this.readableDatabase
+        val cursor = db.query(
+            "users",
+            arrayOf("height", "weight"),
+            "id = ?",
+            arrayOf(userId.toString()),
+            null,
+            null,
+            null
+        )
+
+        var height = 0f
+        var weight = 0f
+
+        if (cursor != null && cursor.moveToFirst()) {
+            height = cursor.getFloat(cursor.getColumnIndexOrThrow("height"))
+            weight = cursor.getFloat(cursor.getColumnIndexOrThrow("height"))
+            cursor.close()
+        }
+
+        db.close()
+        return UserData(height, weight)
+    }
 }
+
+    data class UserData(val height: Float, val weight: Float)
+
+// Add other database operations here (e.g., update, delete, query)

@@ -19,8 +19,7 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.tooling.data.position
-import androidx.core.text.color
+import androidx.compose.ui.semantics.text
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis
@@ -295,17 +294,44 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
     }
 
     private fun updateChartData(indicatedDate: String) {
+        val dbHelper = DatabaseHelper(this)
 
         val data = dbHelper.getDataForDate(indicatedDate)
+        val userData = dbHelper.getUserData(Utils.getUserIdFromSharedPreferences(this))
 
-        val weight = data.weight
-        val bmi = data.weight
+        val weight = if (data.weight > 0) data.weight else userData.weight
+        val height = userData.height
+        val initialWeight = userData.weight
+
+        val bmi = if (height > 0) {
+            weight / ((height / 100.0) * (height / 100.0))
+        } else {
+            0f
+        }
 
         weightProg.text = "$weight kg"
-        progressWeight.text = "Progress from last weight: ..." // liczyc progress
-        progressWeight2.text = "Progress from beginning: ..." // liczyc progress
-        bmiProgress.text = "$bmi"
+
+        val userId = Utils.getUserIdFromSharedPreferences(this)
+        val allWeights = dbHelper.getWeightProgress(userId).first
+
+        val progressFromLast = if (allWeights.size > 1) {
+            weight - allWeights[allWeights.size - 2]
+        } else {
+            weight - initialWeight
+        }
+        progressWeight.text = "Progress from last weight: ${String.format("%.1f", progressFromLast)} kg"
+
+        val progressFromBeginning = if (allWeights.isNotEmpty()) {
+            weight - allWeights[0]
+        } else {
+            0f
+        }
+        progressWeight2.text = "Progress from beginning: ${String.format("%.1f", progressFromBeginning)} kg"
+
+        bmiProgress.text = String.format("%.1f", bmi)
     }
+
+
 
     override fun onValueSelected(e: Entry, h: Highlight) {
 
