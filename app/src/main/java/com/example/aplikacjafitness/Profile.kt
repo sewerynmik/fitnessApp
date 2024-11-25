@@ -37,7 +37,7 @@ import android.provider.MediaStore
 import java.io.FileOutputStream
 
 
-class Profile : AppCompatActivity() {
+class Profile : BaseActivity() {
 
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var profEmailTextView: TextView

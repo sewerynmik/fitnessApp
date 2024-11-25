@@ -46,7 +46,7 @@ import com.github.mikephil.charting.listener.OnChartGestureListener
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 
 
-class Progress : AppCompatActivity(), OnChartValueSelectedListener {
+class Progress : BaseActivity(), OnChartValueSelectedListener {
 
     private lateinit var lineChart: LineChart
     private lateinit var dbHelper: DatabaseHelper

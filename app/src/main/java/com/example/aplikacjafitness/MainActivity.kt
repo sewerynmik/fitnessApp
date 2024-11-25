@@ -15,8 +15,6 @@ import android.hardware.SensorManager
 import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.view.WindowInsets
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.ComponentActivity
@@ -24,9 +22,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
@@ -45,7 +40,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 
-class MainActivity : ComponentActivity(), SensorEventListener {
+class MainActivity : BaseActivity(), SensorEventListener {
 
     private lateinit var dbHelper: DatabaseHelper
     private lateinit var db: SQLiteDatabase
@@ -189,8 +184,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             startActivity(intent)
         }
 
-        hideSystemUi()
-
 //        val ProgressButton: ImageButton = findViewById(R.id.progressBtn)
 //
 //        ProgressButton.setOnClickListener {
@@ -206,7 +199,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             val savedStepCount = sharedPreferences.getInt("STEP_COUNT", 0)
             counterFlow.value = savedStepCount
         }
-        hideSystemUi()
     }
 
     override fun onPause() {
@@ -256,13 +248,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
         // Not yet implemented
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus){
-            hideSystemUi()
-        }
     }
 
     private fun resetStepCount() {
@@ -376,11 +361,4 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         }
     }
 
-    private fun hideSystemUi() {
-        val windowIntentController = WindowCompat.getInsetsController(window, window.decorView)
-
-        windowIntentController.hide(WindowInsetsCompat.Type.systemBars())
-
-        windowIntentController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-    }
 }
