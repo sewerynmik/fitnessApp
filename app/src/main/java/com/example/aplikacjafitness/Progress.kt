@@ -70,6 +70,10 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         setContentView(R.layout.progress)
 
+        dbHelper = DatabaseHelper(this)
+        lineChart = findViewById(R.id.lineChartProgress)
+        setupLineChart()
+        loadLineChartData()
 
         profilePic = findViewById(R.id.profilePicProg)
         loadProfilePictureForButton()
@@ -80,12 +84,6 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         bmiProgress = findViewById(R.id.bmiProgress)
         dateProgress = findViewById(R.id.dateProgress)
         arrowTopProg = findViewById(R.id.arrowTopProg)
-
-        dbHelper = DatabaseHelper(this)
-        lineChart = findViewById(R.id.lineChartProgress)
-        setupLineChart()
-        loadLineChartData()
-
 
         lineChart.setOnChartValueSelectedListener(this)
 
@@ -119,6 +117,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         lineChart.setOnChartValueSelectedListener(null)
         lineChart.setScaleEnabled(false)
         lineChart.setPinchZoom(false)
+        lineChart.isDragEnabled = true
 
         lineChart.setOnChartGestureListener(object : OnChartGestureListener {
             override fun onChartGestureStart(me: MotionEvent?, lastPerformedGesture: ChartTouchListener.ChartGesture?) {}
@@ -144,9 +143,19 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         val userId = Utils.getUserIdFromSharedPreferences(this)
         val (weights, initialDates) = dbHelper.getWeightProgress(userId)
 
+        val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+
         dates = initialDates.sorted()
         val sortedData = dates.zip(weights).sortedBy { it.first }
-        val sortedDates = sortedData.map { it.first }
+        val parsedData = initialDates.mapIndexedNotNull { index, date ->
+            try {
+                dateFormat.parse(date) to weights[index]
+            } catch (e: Exception) {
+                null
+            }
+        }.sortedBy { it.first }
+
+        val sortedDates = parsedData.map { dateFormat.format(it.first) }
         val sortedWeights = sortedData.map { it.second }
 
         val valueToDateMap = mutableMapOf<Float, String>()
@@ -183,21 +192,18 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             }
         }
 
-        val todayIndex = sortedDates.indexOf(
-            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
-        )
+        val today = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
+        val targetIndex = sortedDates.indexOf(today).takeIf { it != -1 } ?: sortedDates.size - 1
 
-        if (todayIndex != -1) {
+        if (targetIndex in 0 until entries.size) {
             lineChart.setVisibleXRangeMaximum(7f)
-            lineChart.moveViewToX(todayIndex.toFloat())
-            updateChartData(sortedDates[todayIndex], sortedWeights[todayIndex])
+            lineChart.moveViewToX(targetIndex.toFloat())
         } else {
-            lineChart.moveViewToX(entries.size.toFloat() / 2f)
+            lineChart.moveViewToX(0f)
         }
 
         lineChart.invalidate()
     }
-
 
 
     private fun showAddProgressPopup() {

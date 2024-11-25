@@ -23,6 +23,15 @@ android:orientation="vertical">
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
+            android:id="@+id/dateProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="5dp"
+            android:text="date"
+            android:textSize="10sp" />
+
+        <TextView
             android:id="@+id/weightProg"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -38,15 +47,6 @@ android:orientation="vertical">
             android:layout_marginTop="75dp"
             android:text="Bmi"
             android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/dateProgress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="5dp"
-            android:text="date"
-            android:textSize="10sp" />
 
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/lineChartProgress"
