@@ -320,8 +320,10 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         val (weights, sortedDates) = dbHelper.getWeightProgress(userId)
         val progressFromLastDay = calculateDailyProgress(sortedDates, weights)
+        val lastEntry = dbHelper.getLastWeightEntry(userId)
+        val lastday = lastEntry?.date// kurwa zrobic ze jak sie wchodzi w apke to bedzie dzialalo
 
-        var index = sortedDates.indexOf(date)
+        var index = sortedDates.indexOf(lastday)
         var isWeightLoss = false
 
         if (index > 0) {
@@ -354,7 +356,8 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             progressWeight.setTextColor(Color.GRAY)
         }
 
-        // PROBLEM JEST TUTAJ KURWA
+
+        // PROBLEM JEST TUTAJ KURWA z liczeniem dni
         if (weights.isNotEmpty()) {
             val firstWeight = weights[0]
             val daysAgo = calculateDaysAgo(sortedDates[0], date)

@@ -282,23 +282,27 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }.also { cursor.close() }
     }
 
-    fun getLastWeightEntryId(userId: Int): Int? {
+    fun getLastWeightEntry(userId: Int): WeightAllData? {
         val db = this.readableDatabase
         val query = """
-        SELECT id FROM weight_progress
+        SELECT weight, date FROM weight_progress
         WHERE user_id = ?
         ORDER BY date DESC
         LIMIT 1
     """
         val cursor = db.rawQuery(query, arrayOf(userId.toString()))
-        val lastEntryId = if (cursor.moveToFirst()) {
-            cursor.getInt(cursor.getColumnIndexOrThrow("id"))
+        val lastEntry = if (cursor.moveToFirst()) {
+            val weight = cursor.getFloat(cursor.getColumnIndexOrThrow("weight"))
+            val date = cursor.getString(cursor.getColumnIndexOrThrow("date"))
+            WeightAllData(weight, date)
         } else {
             null
         }
         cursor.close()
-        return lastEntryId
+        return lastEntry
     }
+
+    data class WeightAllData(val weight: Float, val date: String)
 
 }
 
