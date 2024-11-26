@@ -31,6 +31,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -184,12 +185,12 @@ class MainActivity : BaseActivity(), SensorEventListener {
             startActivity(intent)
         }
 
-//        val ProgressButton: ImageButton = findViewById(R.id.progressBtn)
-//
-//        ProgressButton.setOnClickListener {
-//            val intent = Intent(this, Progress::class.java)
-//            startActivity(intent)
-//        }
+
+        // bottom nav
+        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.menuBottom)
+        if (bottomNavigationView != null) {
+            setupBottomNavigation(bottomNavigationView)
+        }
 
     }
 

@@ -113,49 +113,13 @@
 
     </androidx.cardview.widget.CardView>
 
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/menuBottom"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="#00FFFFFF"
-        android:backgroundTint="#00FFFFFF"
-        android:outlineAmbientShadowColor="#00FFFFFF"
-        android:outlineSpotShadowColor="#00FFFFFF"
-        app:cardBackgroundColor="#00FFFFFF"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        app:labelVisibilityMode="unlabeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/ProfileCard">
-
-        <ImageButton
-            android:id="@+id/progressBtn"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_gravity="right"
-            android:background="@drawable/progress"
-            android:backgroundTint="#000000"
-            android:contentDescription="profile"
-            app:srcCompat="@drawable/progress" />
-
-        <ImageButton
-            android:id="@+id/main"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_gravity="left"
-            android:layout_marginRight="200dp"
-            android:backgroundTint="#00FFFFFF"
-            android:contentDescription="main"
-            app:srcCompat="@drawable/home" />
-
-        <ImageButton
-            android:id="@+id/workout"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_gravity="center"
-            android:backgroundTint="#00FFFFFF"
-            android:contentDescription="workout"
-            android:minHeight="60dp"
-            app:srcCompat="@drawable/workout" />
-
-    </androidx.cardview.widget.CardView>
+        app:menu="@menu/main_menu" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -8,10 +8,6 @@
       android:title="@string/menuWorkout"
       android:icon="@drawable/workout"/>
 
-  <item android:id="@+id/map"
-      android:title="@string/menuAap"
-      android:icon="@drawable/testicon"/>
-
   <item android:id="@+id/profile"
       android:title="@string/menuProfile"
       android:icon="@drawable/person"/>
