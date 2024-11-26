@@ -74,6 +74,7 @@ class Profile : BaseActivity() {
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.menuBottom)
         if (bottomNavigationView != null) {
             setupBottomNavigation(bottomNavigationView)
+            bottomNavigationView.selectedItemId = R.id.profile
         }
 
         val logOutButton: TextView = findViewById(R.id.logOut)

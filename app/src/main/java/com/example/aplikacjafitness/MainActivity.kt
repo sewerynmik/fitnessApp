@@ -190,6 +190,7 @@ class MainActivity : BaseActivity(), SensorEventListener {
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.menuBottom)
         if (bottomNavigationView != null) {
             setupBottomNavigation(bottomNavigationView)
+            bottomNavigationView.selectedItemId = R.id.main
         }
 
     }

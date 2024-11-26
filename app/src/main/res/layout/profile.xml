@@ -13,22 +13,23 @@
         android:layout_margin="10dp"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
+        android:layout_marginBottom="5dp"
         android:background="@color/Tlo_gora"
         android:backgroundTint="#FFFFFF"
         app:cardBackgroundColor="#A42C2C"
         app:cardCornerRadius="30dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/menuBottom"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <de.hdodenhof.circleimageview.CircleImageView
-    android:id="@+id/profileImageView"
-    android:layout_width="100dp"
-    android:layout_height="100dp"
-    android:layout_gravity="center_horizontal"
-    android:foregroundGravity="center"
-    android:src="@drawable/logo" />
+            android:id="@+id/profileImageView"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center_horizontal"
+            android:foregroundGravity="center"
+            android:src="@drawable/logo" />
 
         <EditText
             android:id="@+id/profEmail"
@@ -109,6 +110,7 @@
             android:layout_height="60dp"
             android:layout_gravity="right|top"
             android:background="#00FFFFFF"
+            android:contentDescription="pen"
             app:srcCompat="@drawable/edit_foreground" />
 
     </androidx.cardview.widget.CardView>

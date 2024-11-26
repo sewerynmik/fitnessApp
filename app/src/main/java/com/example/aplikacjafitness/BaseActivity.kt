@@ -38,11 +38,6 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     protected fun setupBottomNavigation(bottomNavigationView: BottomNavigationView) {
-        if (bottomNavigationView == null) {
-            Log.i("BaseActivity", "BottomNavigationView is null - layout not set?")
-            return
-        }
-
         Log.i("BaseActivity", "Setting up BottomNavigationView")
 
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
@@ -72,4 +67,5 @@ open class BaseActivity : AppCompatActivity() {
             }
         }
     }
+
 }
