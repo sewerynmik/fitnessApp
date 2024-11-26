@@ -265,8 +265,45 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.close()
         return UserData(height, weight)
     }
+
+    fun getLastRecordedWeightBeforeDate(userId: Int, date: String): Float? {
+        val db = this.readableDatabase
+        val query = """
+        SELECT weight FROM weight_progress
+        WHERE user_id = ? AND date < ?
+        ORDER BY date DESC
+        LIMIT 1
+    """
+        val cursor = db.rawQuery(query, arrayOf(userId.toString(), date))
+        return if (cursor.moveToFirst()) {
+            cursor.getFloat(cursor.getColumnIndexOrThrow("weight"))
+        } else {
+            null
+        }.also { cursor.close() }
+    }
+
+    fun getLastWeightEntryId(userId: Int): Int? {
+        val db = this.readableDatabase
+        val query = """
+        SELECT id FROM weight_progress
+        WHERE user_id = ?
+        ORDER BY date DESC
+        LIMIT 1
+    """
+        val cursor = db.rawQuery(query, arrayOf(userId.toString()))
+        val lastEntryId = if (cursor.moveToFirst()) {
+            cursor.getInt(cursor.getColumnIndexOrThrow("id"))
+        } else {
+            null
+        }
+        cursor.close()
+        return lastEntryId
+    }
+
 }
 
     data class UserData(val height: Float, val weight: Float)
+
+
 
 // Add other database operations here (e.g., update, delete, query)

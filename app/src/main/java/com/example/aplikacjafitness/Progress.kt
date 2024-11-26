@@ -8,6 +8,10 @@ import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
+import android.text.style.RelativeSizeSpan
 import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.MotionEvent
@@ -69,6 +73,13 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         setContentView(R.layout.progress)
 
+        weightProg = findViewById(R.id.weightProg)
+        progressWeight = findViewById(R.id.progressWeight)
+        progressWeight2 = findViewById(R.id.progressWeight2)
+        bmiProgress = findViewById(R.id.bmiProgress)
+        dateProgress = findViewById(R.id.dateProgress)
+        arrowTopProg = findViewById(R.id.arrowTopProg)
+
         dbHelper = DatabaseHelper(this)
         lineChart = findViewById(R.id.lineChartProgress)
         setupLineChart()
@@ -77,12 +88,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         profilePic = findViewById(R.id.profilePicProg)
         loadProfilePictureForButton()
 
-        weightProg = findViewById(R.id.weightProg)
-        progressWeight = findViewById(R.id.progressWeight)
-        progressWeight2 = findViewById(R.id.progressWeight2)
-        bmiProgress = findViewById(R.id.bmiProgress)
-        dateProgress = findViewById(R.id.dateProgress)
-        arrowTopProg = findViewById(R.id.arrowTopProg)
+
 
         lineChart.setOnChartValueSelectedListener(this)
 
@@ -197,6 +203,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         if (targetIndex in 0 until entries.size) {
             lineChart.setVisibleXRangeMaximum(7f)
             lineChart.moveViewToX(targetIndex.toFloat())
+            updateChartData(sortedDates[targetIndex])
         } else {
             lineChart.moveViewToX(0f)
         }
@@ -293,45 +300,70 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         }
     }
 
-    private fun updateChartData(indicatedDate: String) {
-        val dbHelper = DatabaseHelper(this)
-
-        val data = dbHelper.getDataForDate(indicatedDate)
-        val userData = dbHelper.getUserData(Utils.getUserIdFromSharedPreferences(this))
+    private fun updateChartData(date: String) {
+        val userId = Utils.getUserIdFromSharedPreferences(this)
+        val data = dbHelper.getDataForDate(date)
+        val userData = dbHelper.getUserData(userId)
 
         val weight = if (data.weight > 0) data.weight else userData.weight
         val height = userData.height
-        val initialWeight = userData.weight
 
         val bmi = if (height > 0) {
-            weight / ((height / 100.0) * (height / 100.0))
+            weight / ((height / 100.0) * (height / 100.0)).toFloat()
         } else {
             0f
         }
 
-        weightProg.text = "$weight kg"
+        weightProg.text = if (data.weight > 0) "$weight kg" else dbHelper.getLastRecordedWeightBeforeDate(userId,date).toString()
+        dateProgress.text = date
+        bmiProgress.text = if (bmi > 0) String.format("BMI: %.1f", bmi) else "BMI: -"
 
-        val userId = Utils.getUserIdFromSharedPreferences(this)
-        val allWeights = dbHelper.getWeightProgress(userId).first
+        val (weights, sortedDates) = dbHelper.getWeightProgress(userId)
+        val progressFromLastDay = calculateDailyProgress(sortedDates, weights)
 
-        val progressFromLast = if (allWeights.size > 1) {
-            weight - allWeights[allWeights.size - 2]
+        var index = sortedDates.indexOf(date)
+        var isWeightLoss = false
+
+        if (index > 0) {
+            var dailyProgress = progressFromLastDay[index - 1]
+            if (dailyProgress < 0) {
+                dailyProgress = dailyProgress * -1
+                isWeightLoss = true
+            }
+
+            val progressText = "${String.format("%.1f", dailyProgress)} kg\n Progress"
+            val spannableString = SpannableString(progressText)
+
+            val numberEndIndex = progressText.indexOf(" kg")
+            spannableString.setSpan(
+                ForegroundColorSpan(if (isWeightLoss) Color.GREEN else Color.RED),
+                0,
+                numberEndIndex,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            spannableString.setSpan(
+                RelativeSizeSpan(2f),
+                0,
+                numberEndIndex,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+
+            progressWeight.text = spannableString
         } else {
-            weight - initialWeight
+            progressWeight.text = "No progress data"
+            progressWeight.setTextColor(Color.GRAY)
         }
-        progressWeight.text = "Progress from last weight: ${String.format("%.1f", progressFromLast)} kg"
 
-        val progressFromBeginning = if (allWeights.isNotEmpty()) {
-            weight - allWeights[0]
+        // PROBLEM JEST TUTAJ KURWA
+        if (weights.isNotEmpty()) {
+            val firstWeight = weights[0]
+            val daysAgo = calculateDaysAgo(sortedDates[0], date)
+            val progressCompared = weight - firstWeight
+            progressWeight2.text = "Compared with $daysAgo days ago:\n ${String.format("%.1f", progressCompared)} kg"
         } else {
-            0f
+            progressWeight2.text = "No progress data available"
         }
-        progressWeight2.text = "Progress from beginning: ${String.format("%.1f", progressFromBeginning)} kg"
-
-        bmiProgress.text = String.format("%.1f", bmi)
     }
-
-
 
     override fun onValueSelected(e: Entry, h: Highlight) {
 
@@ -359,16 +391,9 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             val dateIndex = closestEntry.x.toInt()
             if (dateIndex in dates.indices) {
                 val date = dates[dateIndex]
-                val weight = closestEntry.y
-                updateChartData(date, weight)
+                updateChartData(date)
             }
         }
-    }
-
-    private fun updateChartData(date: String, weight: Float) {
-        weightProg.text = "$weight kg"
-        dateProgress.text = "$date"
-        bmiProgress.text = "bmi"
     }
 
     private fun snapToNearestDot() {
@@ -379,14 +404,32 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         }
 
         closestEntryIndex?.let { index ->
-            lineChart.centerViewToAnimated(
-                index.toFloat(),
-                0f,
-                YAxis.AxisDependency.LEFT,
-                300
-            )
+            val validDate = dates.getOrNull(index) ?: return@let
+            updateChartData(validDate)
+            lineChart.centerViewToAnimated(index.toFloat(), 0f, YAxis.AxisDependency.LEFT, 300)
         }
     }
+
+    private fun calculateDailyProgress(dates: List<String>, weights: List<Float>): List<Float> {
+        val dailyProgress = mutableListOf<Float>()
+
+        for (i in 1 until weights.size) {
+            val progress = weights[i] - weights[i - 1]
+            dailyProgress.add(progress)
+        }
+
+        return dailyProgress
+    }
+
+    private fun calculateDaysAgo(startDate: String, endDate: String): Int {
+        val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+        val start = dateFormat.parse(startDate)
+        val end = dateFormat.parse(endDate)
+
+        val differenceInMillis = end.time - start.time
+        return (differenceInMillis / (1000 * 60 * 60 * 24)).toInt()
+    }
+
 
 
 }

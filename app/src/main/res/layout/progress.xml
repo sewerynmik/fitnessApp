@@ -120,7 +120,7 @@ android:orientation="vertical">
                     android:id="@+id/progressWeight"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
+                    android:layout_gravity="center|center_vertical"
                     android:gravity="center"
                     android:text="weight progress from last weight" />
             </androidx.cardview.widget.CardView>
