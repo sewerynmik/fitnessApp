@@ -13,6 +13,7 @@ import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.widget.Button
@@ -24,6 +25,7 @@ import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.semantics.text
+import androidx.core.content.ContextCompat
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis
@@ -73,6 +75,9 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         setContentView(R.layout.progress)
 
+        val userId = Utils.getUserIdFromSharedPreferences(this)
+
+
         weightProg = findViewById(R.id.weightProg)
         progressWeight = findViewById(R.id.progressWeight)
         progressWeight2 = findViewById(R.id.progressWeight2)
@@ -88,6 +93,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         profilePic = findViewById(R.id.profilePicProg)
         loadProfilePictureForButton()
 
+        val (weights, sortedDates) = dbHelper.getWeightProgress(userId)
 
 
         lineChart.setOnChartValueSelectedListener(this)
@@ -104,6 +110,18 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         val addButton: ImageButton = findViewById(R.id.addButton)
         addButton.setOnClickListener {
             showAddProgressPopup()
+        }
+        if (sortedDates.isNotEmpty() && weights.isNotEmpty()) {
+            val latestDate = sortedDates.last()
+            updateChartData(latestDate)
+
+            initChart(weights, sortedDates)
+        } else {
+            weightProg.text = "No weight data"
+            dateProgress.text = "No date available"
+            bmiProgress.text = "BMI: -"
+            progressWeight.text = "No progress data"
+            progressWeight2.text = "No progress available"
         }
 
     }
@@ -149,8 +167,8 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         val (weights, initialDates) = dbHelper.getWeightProgress(userId)
 
         val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-
         dates = initialDates.sorted()
+
         val sortedData = dates.zip(weights).sortedBy { it.first }
         val parsedData = initialDates.mapIndexedNotNull { index, date ->
             try {
@@ -170,6 +188,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         }
 
         val dataSet = LineDataSet(entries, "Weight")
+
         dataSet.color = Color.GREEN
         dataSet.circleRadius = 5f
         dataSet.circleColors = listOf(Color.GREEN)
@@ -181,7 +200,9 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             GradientDrawable.Orientation.TOP_BOTTOM,
             intArrayOf(Color.argb(255, 0, 255, 0), Color.argb(0, 0, 255, 0))
         )
+
         dataSet.setDrawFilled(true)
+
         dataSet.fillDrawable = gradientDrawable
 
         val lineData = LineData(dataSet)
@@ -210,6 +231,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         lineChart.invalidate()
     }
+
 
 
     private fun showAddProgressPopup() {
@@ -314,16 +336,26 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             0f
         }
 
-        weightProg.text = if (data.weight > 0) "$weight kg" else dbHelper.getLastRecordedWeightBeforeDate(userId,date).toString()
+        weightProg.text = if (data.weight > 0) "$weight kg" else dbHelper.getLastRecordedWeightBeforeDate(userId, date).toString()
         dateProgress.text = date
         bmiProgress.text = if (bmi > 0) String.format("BMI: %.1f", bmi) else "BMI: -"
 
-        val (weights, sortedDates) = dbHelper.getWeightProgress(userId)
-        val progressFromLastDay = calculateDailyProgress(sortedDates, weights)
-        val lastEntry = dbHelper.getLastWeightEntry(userId)
-        val lastday = lastEntry?.date// kurwa zrobic ze jak sie wchodzi w apke to bedzie dzialalo
+        val (weights, initialSortedDates) = dbHelper.getWeightProgress(userId)
 
-        var index = sortedDates.indexOf(lastday)
+        val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+        val parsedDates = initialSortedDates.mapNotNull {
+            try {
+                dateFormat.parse(it)
+            } catch (e: Exception) {
+                null
+            }
+        }
+        val sortedParsedDates = parsedDates.sorted()
+        val sortedDates = sortedParsedDates.map { dateFormat.format(it) }
+
+        val progressFromLastDay = calculateDailyProgress(sortedDates, weights)
+
+        var index = sortedDates.indexOf(date)
         var isWeightLoss = false
 
         if (index > 0) {
@@ -356,8 +388,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             progressWeight.setTextColor(Color.GRAY)
         }
 
-
-        // PROBLEM JEST TUTAJ KURWA z liczeniem dni
+        // PROBLEM JEST TUTAJ KURWA
         if (weights.isNotEmpty()) {
             val firstWeight = weights[0]
             val daysAgo = calculateDaysAgo(sortedDates[0], date)
@@ -368,23 +399,42 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         }
     }
 
+
+
     override fun onValueSelected(e: Entry, h: Highlight) {
+        val x = e.x.toInt()
+        if (x in dates.indices) {
+            val selectedDate = dates[x]
+            updateChartData(selectedDate)
 
-        val x = e.x
-        val transformer = lineChart.getTransformer(LEFT)
-        val arrowX = transformer.getPixelForValues(x, 0f).x
-        arrowTopProg.x = arrowX.toFloat() - arrowTopProg.width / 2f
-
-        val indicatedDate = dates[x.toInt()]
-        updateChartData(indicatedDate)
+            val transformer = lineChart.getTransformer(YAxis.AxisDependency.LEFT)
+            val arrowX = transformer.getPixelForValues(x.toFloat(), 0f).x
+            arrowTopProg.x = (arrowX - arrowTopProg.width / 2f).toFloat()
+        }
     }
+
+
 
     override fun onNothingSelected() {
         TODO("Not yet implemented")//tu nic ma nie byc :)
     }
 
     private fun updateDataOnScroll() {
-        val visibleXRange = lineChart.visibleXRange
+        val centerX = (lineChart.lowestVisibleX + lineChart.highestVisibleX) / 2f
+        val closestEntry = lineChart.data.getDataSetByIndex(0)
+            ?.getEntryForXValue(centerX, Float.NaN, DataSet.Rounding.CLOSEST)
+
+        closestEntry?.let { entry ->
+            val index = entry.x.toInt()
+            if (index in dates.indices) {
+                val date = dates[index]
+                updateChartData(date)
+            }
+        }
+    }
+
+
+    private fun snapToNearestDot() {
         val centerX = (lineChart.lowestVisibleX + lineChart.highestVisibleX) / 2f
 
         val closestEntry = lineChart.data.getDataSetByIndex(0)
@@ -395,23 +445,12 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             if (dateIndex in dates.indices) {
                 val date = dates[dateIndex]
                 updateChartData(date)
+                lineChart.centerViewToAnimated(dateIndex.toFloat(), 0f, YAxis.AxisDependency.LEFT, 300)
             }
         }
     }
 
-    private fun snapToNearestDot() {
-        val currentViewCenter = lineChart.lowestVisibleX + (lineChart.highestVisibleX - lineChart.lowestVisibleX) / 2f
 
-        val closestEntryIndex = dates.indices.minByOrNull { index ->
-            Math.abs(index - currentViewCenter)
-        }
-
-        closestEntryIndex?.let { index ->
-            val validDate = dates.getOrNull(index) ?: return@let
-            updateChartData(validDate)
-            lineChart.centerViewToAnimated(index.toFloat(), 0f, YAxis.AxisDependency.LEFT, 300)
-        }
-    }
 
     private fun calculateDailyProgress(dates: List<String>, weights: List<Float>): List<Float> {
         val dailyProgress = mutableListOf<Float>()
@@ -423,15 +462,53 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         return dailyProgress
     }
-
+    //nie liczy dobrze dni znaczy liczy ale czasem błąd wypierdala ze jakis losowy dzien napierdala
     private fun calculateDaysAgo(startDate: String, endDate: String): Int {
         val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-        val start = dateFormat.parse(startDate)
-        val end = dateFormat.parse(endDate)
+        dateFormat.timeZone = TimeZone.getTimeZone("UTC")
 
-        val differenceInMillis = end.time - start.time
-        return (differenceInMillis / (1000 * 60 * 60 * 24)).toInt()
+        return try {
+            val start = dateFormat.parse("$startDate UTC")
+            val end = dateFormat.parse("$endDate UTC")
+            Log.d("DaysAgo", "Start: $start, End: $end")
+
+            if (start != null && end != null) {
+                val differenceInMillis = end.time - start.time
+                (differenceInMillis / (1000 * 60 * 60 * 24)).toInt()
+            } else {
+                0
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            0
+        }
     }
+
+
+
+
+
+    private fun initChart(weights: List<Float>, dates: List<String>) {
+        val entries = weights.mapIndexed { index, weight ->
+            Entry(index.toFloat(), weight)
+        }
+
+        val dataSet = LineDataSet(entries, "Weight Progress").apply {
+            color = Color.GREEN
+            valueTextColor = Color.BLACK
+            valueTextSize = 10f
+            setCircleColor(Color.GREEN)
+            setDrawCircleHole(false)
+        }
+
+
+        val lineData = LineData(dataSet)
+        lineChart.data = lineData
+        lineChart.description.isEnabled = false
+        lineChart.invalidate()
+    }
+
+
 
 
 
