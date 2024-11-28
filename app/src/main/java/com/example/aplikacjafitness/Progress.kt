@@ -401,10 +401,10 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             progressWeight.text = "No progress data"
             progressWeight.setTextColor(Color.GRAY)
         }
-// tutaj blad
+// juz bez blad
         progressWeight2.text = {
             val dateIndex = sortedDates.indexOf(date)
-            if (dateIndex in weightsList.indices && dateIndex > 0) { 
+            if (dateIndex in weightsList.indices && dateIndex > 0) {
                 val firstWeight = weightsList[0]
                 val daysAgo = calculateDaysAgo(sortedDates[0], date)
                 val progressCompared = weightsList[dateIndex] - firstWeight
