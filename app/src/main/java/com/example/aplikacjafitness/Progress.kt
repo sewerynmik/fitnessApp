@@ -189,22 +189,6 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         val dataSet = LineDataSet(entries, "Weight")
 
-        dataSet.color = Color.GREEN
-        dataSet.circleRadius = 5f
-        dataSet.circleColors = listOf(Color.GREEN)
-        dataSet.setDrawCircles(true)
-        dataSet.setDrawValues(false)
-        dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
-
-        val gradientDrawable = GradientDrawable(
-            GradientDrawable.Orientation.TOP_BOTTOM,
-            intArrayOf(Color.argb(255, 0, 255, 0), Color.argb(0, 0, 255, 0))
-        )
-
-        dataSet.setDrawFilled(true)
-
-        dataSet.fillDrawable = gradientDrawable
-
         val lineData = LineData(dataSet)
         lineChart.data = lineData
 
@@ -229,7 +213,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             lineChart.moveViewToX(0f)
         }
 
-        lineChart.invalidate()
+       // lineChart.invalidate()
     }
 
 
@@ -322,7 +306,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         }
     }
 
-    private fun updateChartData(date: String) {
+    private fun updateChartData(date: String) {//gradient mi rozjebało
         val userId = Utils.getUserIdFromSharedPreferences(this)
         val data = dbHelper.getDataForDate(date)
         val userData = dbHelper.getUserData(userId)
@@ -450,8 +434,6 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         }
     }
 
-
-
     private fun calculateDailyProgress(dates: List<String>, weights: List<Float>): List<Float> {
         val dailyProgress = mutableListOf<Float>()
 
@@ -484,10 +466,6 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         }
     }
 
-
-
-
-
     private fun initChart(weights: List<Float>, dates: List<String>) {
         val entries = weights.mapIndexed { index, weight ->
             Entry(index.toFloat(), weight)
@@ -497,8 +475,20 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             color = Color.GREEN
             valueTextColor = Color.BLACK
             valueTextSize = 10f
-            setCircleColor(Color.GREEN)
-            setDrawCircleHole(false)
+            circleRadius = 5f
+            circleColors = listOf(Color.GREEN)
+            setDrawCircles(true)
+            setDrawValues(false)
+            mode = LineDataSet.Mode.CUBIC_BEZIER
+
+            val gradientDrawable = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(Color.argb(255, 0, 255, 0), Color.argb(0, 0, 255, 0))
+            )
+
+            setDrawFilled(true)
+
+            fillDrawable = gradientDrawable
         }
 
 
