@@ -31,19 +31,23 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/AppTheme"/>
 
         <activity
             android:name=".Register"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/AppTheme" />
 
         <activity
             android:name=".Profile"
-            android:exported="false"/>
+            android:exported="false"
+            android:theme="@style/AppTheme"/>
 
         <activity
             android:name=".RegisterData"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/AppTheme" />
 
         <activity
             android:name=".RegisterData2"
@@ -51,7 +55,8 @@
 
         <activity
             android:name=".Progress"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/AppTheme" />
 
 
         <meta-data

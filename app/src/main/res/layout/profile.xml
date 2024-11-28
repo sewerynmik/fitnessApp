@@ -119,7 +119,7 @@
         android:id="@+id/menuBottom"
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        app:labelVisibilityMode="unlabeled"
+        style="@style/BottomNavTheme"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
