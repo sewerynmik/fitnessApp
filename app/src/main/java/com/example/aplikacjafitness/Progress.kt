@@ -351,8 +351,15 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             dbHelper.getLastRecordedWeightBeforeDate(userId, date).toString()
         }
     }().toString()
+
         dateProgress.text = date
-        bmiProgress.text = if (bmi > 0) String.format("BMI: %.1f", bmi) else "BMI: -"
+
+        bmiProgress.text = when {
+            bmi >= 30 -> "BMI: %.1f (Obese)".format(bmi)
+            bmi >= 25 -> "BMI: %.1f (Overweight)".format(bmi)
+            bmi >= 18.5 -> "BMI: %.1f (Normal)".format(bmi)
+            else -> "BMI: %.1f (Underweight)".format(bmi)
+        }
 
         val (weights, initialSortedDates) = dbHelper.getWeightProgress(userId)
 
@@ -401,14 +408,33 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             progressWeight.text = "No progress data"
             progressWeight.setTextColor(Color.GRAY)
         }
-// juz bez blad
+// tutaj zmienic kololki
         progressWeight2.text = {
             val dateIndex = sortedDates.indexOf(date)
             if (dateIndex in weightsList.indices && dateIndex > 0) {
                 val firstWeight = weightsList[0]
                 val daysAgo = calculateDaysAgo(sortedDates[0], date)
                 val progressCompared = weightsList[dateIndex] - firstWeight
-                "Compared with $daysAgo days ago:\n ${String.format("%.1f", progressCompared)} kg"
+                val progressText = "Compared with $daysAgo days ago:\n ${String.format("%.1f", progressCompared)} kg"
+                val spannableString = SpannableString(progressText)
+
+                val numberStartIndex = progressText.indexOf("\n ") + 2
+                val numberEndIndex = progressText.indexOf(" kg")
+                spannableString.setSpan(
+                    ForegroundColorSpan(if (progressCompared < 0) Color.GREEN else Color.RED),
+                    numberStartIndex,
+                    numberEndIndex,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+
+                spannableString.setSpan(
+                    RelativeSizeSpan(2f),
+                    numberStartIndex,
+                    numberEndIndex,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+
+                spannableString
             } else {
                 "No progress data available"
             }
