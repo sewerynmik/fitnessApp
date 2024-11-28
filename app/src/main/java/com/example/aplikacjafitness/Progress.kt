@@ -24,6 +24,7 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.semantics.text
 import java.time.LocalDate
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
@@ -72,6 +73,9 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
     private var dates: List<String> = emptyList()
 
+    private lateinit var weightsList: List<Float>
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -90,10 +94,10 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         dbHelper = DatabaseHelper(this)
         lineChart = findViewById(R.id.lineChartProgress)
 
-//tutaj blad
+//okej
         val (weights, initialSortedDates) = dbHelper.getWeightProgress(userId)
         val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault())
-        val sortedDates = initialSortedDates.sortedBy {
+        sortedDates = initialSortedDates.sortedBy {
             LocalDate.parse(it, formatter)
         }
         val sort = sortedDates.last()
@@ -111,7 +115,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
         Log.d("Progress", "current date: $currentDate")
-        updateChartData(currentDate)
+        updateChartData(currentDate,weightsList)
 
         val homeButton: ImageButton = findViewById(R.id.main)
         homeButton.setOnClickListener {
@@ -126,7 +130,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         if (sortedDates.isNotEmpty() && weights.isNotEmpty()) {
             val latestDate = sortedDates.last()
             //tu okej
-            updateChartData(latestDate)
+            updateChartData(latestDate,weightsList)
 
             initChart(weights, sortedDates)
         } else {
@@ -183,7 +187,6 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         Log.d("Progress2", "Initial data - Dates: $initialDates, Weights: $weights")
 
-        // Parse dates and pair with weights
         val parsedData = initialDates.mapIndexedNotNull { index, date ->
             try {
                 dateFormat.parse(date)?.let { it to weights[index] }
@@ -193,8 +196,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             }
         }.sortedBy { it.first }
 
-        // Split parsed data into separate lists
-        val sortedDates = parsedData.map { dateFormat.format(it.first) } // Format back to strings
+        val sortedDates = parsedData.map { dateFormat.format(it.first) }
         val sortedWeights = parsedData.map { it.second }
     Log.d("Progress2", "sorted datesss: $sortedDates + $sortedWeights")
         val valueToDateMap = mutableMapOf<Float, String>()
@@ -203,7 +205,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             valueToDateMap[i.toFloat()] = sortedDates[i]
         }//powrut
         Log.d("Progress2", "entries: $entries")
-
+        weightsList = weights
         val dataSet = LineDataSet(entries, "Weight")
 
         val lineData = LineData(dataSet)
@@ -227,7 +229,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             lineChart.moveViewToX(targetIndex.toFloat())
             Log.d("Sorted", "sorted index: $sortedDates")
             //tu okej
-            updateChartData(sortedDates[targetIndex])
+            updateChartData(sortedDates[targetIndex],weights)
         } else {
             lineChart.moveViewToX(0f)
         }
@@ -324,14 +326,14 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             profilePic.setImageResource(R.drawable.person)
         }
     }
-//zle przekazuje wagi
-    private fun updateChartData(date: String) {
+
+    private fun updateChartData(date: String,weights: List<Float>) {
         val userId = Utils.getUserIdFromSharedPreferences(this)
         val data = dbHelper.getDataForDate(date)
         val userData = dbHelper.getUserData(userId)
     Log.d("Progress", "w updatechartdata: $date + $data")
 
-        val weight = if (data.weight > 0) data.weight else userData.weight
+        var weight = if (data.weight > 0) data.weight else userData.weight
         val height = userData.height
 
         val bmi = if (height > 0) {
@@ -339,8 +341,16 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         } else {
             0f
         }
+        Log.d("Weightlista","wsg $weightsList")
 
-        weightProg.text = if (data.weight > 0) "$weight kg" else dbHelper.getLastRecordedWeightBeforeDate(userId, date).toString()
+    weightProg.text = {
+        val dateIndex = sortedDates.indexOf(date)
+        if (dateIndex in weightsList.indices) {
+            "${weightsList[dateIndex]} kg"
+        } else {
+            dbHelper.getLastRecordedWeightBeforeDate(userId, date).toString()
+        }
+    }().toString()
         dateProgress.text = date
         bmiProgress.text = if (bmi > 0) String.format("BMI: %.1f", bmi) else "BMI: -"
 
@@ -391,15 +401,18 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             progressWeight.text = "No progress data"
             progressWeight.setTextColor(Color.GRAY)
         }
-
-        if (weights.isNotEmpty()) {
-            val firstWeight = weights[0]
-            val daysAgo = calculateDaysAgo(sortedDates[0], date)
-            val progressCompared = weight - firstWeight
-            progressWeight2.text = "Compared with $daysAgo days ago:\n ${String.format("%.1f", progressCompared)} kg"
-        } else {
-            progressWeight2.text = "No progress data available"
-        }
+// tutaj blad
+        progressWeight2.text = {
+            val dateIndex = sortedDates.indexOf(date)
+            if (dateIndex in weightsList.indices && dateIndex > 0) { 
+                val firstWeight = weightsList[0]
+                val daysAgo = calculateDaysAgo(sortedDates[0], date)
+                val progressCompared = weightsList[dateIndex] - firstWeight
+                "Compared with $daysAgo days ago:\n ${String.format("%.1f", progressCompared)} kg"
+            } else {
+                "No progress data available"
+            }
+        }().toString()
     }
 
     override fun onValueSelected(e: Entry, h: Highlight) {
@@ -408,7 +421,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         if (x in sortedDates.indices) {
             val selectedDate = sortedDates[x]
             Log.d("SelDate", "selected date: $selectedDate")
-            updateChartData(selectedDate)
+            updateChartData(selectedDate,weightsList)
 
             val transformer = lineChart.getTransformer(YAxis.AxisDependency.LEFT)
             val arrowX = transformer.getPixelForValues(x.toFloat(), 0f).x
@@ -430,8 +443,8 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             val index = entry.x.toInt()
             if (index in sortedDates.indices) {
                 val date = sortedDates[index]
-                Log.d("Progress", "date: $date")
-                updateChartData(date)
+                Log.d("Progress", "Tu git: $sortedDates")
+                updateChartData(date,weightsList)
             }
         }
     }
@@ -448,7 +461,7 @@ Log.d("Progress2", "centerX: $centerX")
             if (dateIndex in dates.indices) {
                 val date = dates[dateIndex]
                 Log.d("Progress", "date2: $date")
-                updateChartData(date)
+                updateChartData(date,weightsList)
                 lineChart.centerViewToAnimated(dateIndex.toFloat(), 0f, YAxis.AxisDependency.LEFT, 300)
             }
         }
@@ -490,7 +503,7 @@ Log.d("Progress2", "centerX: $centerX")
         val entries = weights.mapIndexed { index, weight ->
             Entry(index.toFloat(), weight)
         }
-
+Log.d("Progress2", "wyswietlanie dobrze: $entries")
         val dataSet = LineDataSet(entries, "Weight Progress").apply {
             color = Color.GREEN
             valueTextColor = Color.BLACK
