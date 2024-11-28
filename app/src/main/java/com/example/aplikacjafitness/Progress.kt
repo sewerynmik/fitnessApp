@@ -222,6 +222,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             lineChart.setVisibleXRangeMaximum(7f)
             lineChart.moveViewToX(targetIndex.toFloat())
             Log.d("Sorted", "sorted index: $sortedDates")
+            //tu okej
             updateChartData(sortedDates[targetIndex])
         } else {
             lineChart.moveViewToX(0f)
@@ -435,11 +436,12 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         val closestEntry = lineChart.data.getDataSetByIndex(0)
             ?.getEntryForXValue(centerX, Float.NaN, DataSet.Rounding.CLOSEST)
-
+//tutaj jest problem na pozniej pozdrawiiam po hrze z wozniakiem w Fortniet
         if (closestEntry != null) {
             val dateIndex = closestEntry.x.toInt()
-            if (dateIndex in dates.indices) {
-                val date = dates[dateIndex]
+            if (dateIndex in sortedDates.indices) {
+                val date = sortedDates[dateIndex]
+                Log.d("Progress", "date2: $date")
                 updateChartData(date)
                 lineChart.centerViewToAnimated(dateIndex.toFloat(), 0f, YAxis.AxisDependency.LEFT, 300)
             }
