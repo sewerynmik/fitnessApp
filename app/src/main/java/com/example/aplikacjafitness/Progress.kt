@@ -104,7 +104,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         lineChart.setOnChartValueSelectedListener(this)
 
         setupLineChart(sortedDates)
-        loadLineChartData()
+        loadLineChartData(sortedDates)
 
         profilePic = findViewById(R.id.profilePicProg)
         loadProfilePictureForButton()
@@ -174,31 +174,35 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         })
     }
 
-    private fun loadLineChartData() {
+    private fun loadLineChartData(dates: List<String>) {
         val entries = ArrayList<Entry>()
         val userId = Utils.getUserIdFromSharedPreferences(this)
         val (weights, initialDates) = dbHelper.getWeightProgress(userId)
 
         val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-        dates = initialDates.sorted()
 
-        val sortedData = dates.zip(weights).sortedBy { it.first }
+        Log.d("Progress2", "Initial data - Dates: $initialDates, Weights: $weights")
+
+        // Parse dates and pair with weights
         val parsedData = initialDates.mapIndexedNotNull { index, date ->
             try {
-                dateFormat.parse(date) to weights[index]
+                dateFormat.parse(date)?.let { it to weights[index] }
             } catch (e: Exception) {
+                Log.e("Progress2", "Failed to parse date: $date", e)
                 null
             }
         }.sortedBy { it.first }
 
-        val sortedDates = parsedData.map { dateFormat.format(it.first) }
-        val sortedWeights = sortedData.map { it.second }
-
+        // Split parsed data into separate lists
+        val sortedDates = parsedData.map { dateFormat.format(it.first) } // Format back to strings
+        val sortedWeights = parsedData.map { it.second }
+    Log.d("Progress2", "sorted datesss: $sortedDates + $sortedWeights")
         val valueToDateMap = mutableMapOf<Float, String>()
-        for (i in sortedWeights.indices) {
-            entries.add(Entry(i.toFloat(), sortedWeights[i]))
+        for (i in weights.indices) {
+            entries.add(Entry(i.toFloat(), weights[i]))
             valueToDateMap[i.toFloat()] = sortedDates[i]
-        }
+        }//powrut
+        Log.d("Progress2", "entries: $entries")
 
         val dataSet = LineDataSet(entries, "Weight")
 
@@ -270,7 +274,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0)
 
-        loadLineChartData()
+        loadLineChartData(sortedDates)
     }
 
 
@@ -320,12 +324,12 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             profilePic.setImageResource(R.drawable.person)
         }
     }
-//zle przekazuje date
+//zle przekazuje wagi
     private fun updateChartData(date: String) {
         val userId = Utils.getUserIdFromSharedPreferences(this)
-        Log.d("Progress", "w updatechartdata: $date")
         val data = dbHelper.getDataForDate(date)
         val userData = dbHelper.getUserData(userId)
+    Log.d("Progress", "w updatechartdata: $date + $data")
 
         val weight = if (data.weight > 0) data.weight else userData.weight
         val height = userData.height
@@ -400,6 +404,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
     override fun onValueSelected(e: Entry, h: Highlight) {
         val x = e.x.toInt()
+        Log.d("SelDate", "x: $x")
         if (x in sortedDates.indices) {
             val selectedDate = sortedDates[x]
             Log.d("SelDate", "selected date: $selectedDate")
@@ -407,6 +412,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
             val transformer = lineChart.getTransformer(YAxis.AxisDependency.LEFT)
             val arrowX = transformer.getPixelForValues(x.toFloat(), 0f).x
+            Log.d("Progress2","Strzalka: $arrowX")
             arrowTopProg.x = (arrowX - arrowTopProg.width / 2f).toFloat()
         }
     }
@@ -433,14 +439,14 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
     private fun snapToNearestDot() {
         val centerX = (lineChart.lowestVisibleX + lineChart.highestVisibleX) / 2f
-
+Log.d("Progress2", "centerX: $centerX")
         val closestEntry = lineChart.data.getDataSetByIndex(0)
             ?.getEntryForXValue(centerX, Float.NaN, DataSet.Rounding.CLOSEST)
-//tutaj jest problem na pozniej pozdrawiiam po hrze z wozniakiem w Fortniet
+        Log.d("Progress2","closestEntry: $closestEntry")
         if (closestEntry != null) {
             val dateIndex = closestEntry.x.toInt()
-            if (dateIndex in sortedDates.indices) {
-                val date = sortedDates[dateIndex]
+            if (dateIndex in dates.indices) {
+                val date = dates[dateIndex]
                 Log.d("Progress", "date2: $date")
                 updateChartData(date)
                 lineChart.centerViewToAnimated(dateIndex.toFloat(), 0f, YAxis.AxisDependency.LEFT, 300)
@@ -494,6 +500,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             setDrawCircles(true)
             setDrawValues(false)
             mode = LineDataSet.Mode.CUBIC_BEZIER
+
 
             val gradientDrawable = GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
