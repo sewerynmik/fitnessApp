@@ -24,8 +24,7 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.semantics.text
-import androidx.core.content.ContextCompat
+import java.time.LocalDate
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis
@@ -49,6 +48,7 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.ChartTouchListener
 import com.github.mikephil.charting.listener.OnChartGestureListener
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
+import java.time.format.DateTimeFormatter
 
 
 class Progress : AppCompatActivity(), OnChartValueSelectedListener {
@@ -65,6 +65,8 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
     private lateinit var progressWeight2: TextView
     private lateinit var bmiProgress: TextView
     private lateinit var dateProgress: TextView
+
+    private lateinit var sortedDates: List<String>
 
     private lateinit var arrowTopProg: ImageView
 
@@ -87,18 +89,28 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         dbHelper = DatabaseHelper(this)
         lineChart = findViewById(R.id.lineChartProgress)
-        setupLineChart()
+
+//tutaj blad
+        val (weights, initialSortedDates) = dbHelper.getWeightProgress(userId)
+        val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault())
+        val sortedDates = initialSortedDates.sortedBy {
+            LocalDate.parse(it, formatter)
+        }
+        val sort = sortedDates.last()
+
+        Log.d("SortedDates", "sorted dates: $sortedDates")
+        Log.d("SortedDates", "sort: $sort")
+
+        lineChart.setOnChartValueSelectedListener(this)
+
+        setupLineChart(sortedDates)
         loadLineChartData()
 
         profilePic = findViewById(R.id.profilePicProg)
         loadProfilePictureForButton()
 
-        val (weights, sortedDates) = dbHelper.getWeightProgress(userId)
-
-
-        lineChart.setOnChartValueSelectedListener(this)
-
         val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
+        Log.d("Progress", "current date: $currentDate")
         updateChartData(currentDate)
 
         val homeButton: ImageButton = findViewById(R.id.main)
@@ -113,6 +125,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         }
         if (sortedDates.isNotEmpty() && weights.isNotEmpty()) {
             val latestDate = sortedDates.last()
+            //tu okej
             updateChartData(latestDate)
 
             initChart(weights, sortedDates)
@@ -126,7 +139,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
     }
 
-    private fun setupLineChart() {
+    private fun setupLineChart(sortedDates: List<String>) {
         lineChart.description.isEnabled = false
         lineChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
         lineChart.xAxis.setDrawGridLines(false)
@@ -156,7 +169,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
             override fun onChartScale(me: MotionEvent?, scaleX: Float, scaleY: Float) {}
             override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
-                updateDataOnScroll()
+                updateDataOnScroll(sortedDates)
             }
         })
     }
@@ -208,6 +221,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         if (targetIndex in 0 until entries.size) {
             lineChart.setVisibleXRangeMaximum(7f)
             lineChart.moveViewToX(targetIndex.toFloat())
+            Log.d("Sorted", "sorted index: $sortedDates")
             updateChartData(sortedDates[targetIndex])
         } else {
             lineChart.moveViewToX(0f)
@@ -305,9 +319,10 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             profilePic.setImageResource(R.drawable.person)
         }
     }
-
-    private fun updateChartData(date: String) {//gradient mi rozjebało
+//zle przekazuje date
+    private fun updateChartData(date: String) {
         val userId = Utils.getUserIdFromSharedPreferences(this)
+        Log.d("Progress", "w updatechartdata: $date")
         val data = dbHelper.getDataForDate(date)
         val userData = dbHelper.getUserData(userId)
 
@@ -372,7 +387,6 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             progressWeight.setTextColor(Color.GRAY)
         }
 
-        // PROBLEM JEST TUTAJ KURWA
         if (weights.isNotEmpty()) {
             val firstWeight = weights[0]
             val daysAgo = calculateDaysAgo(sortedDates[0], date)
@@ -383,12 +397,11 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         }
     }
 
-
-
     override fun onValueSelected(e: Entry, h: Highlight) {
         val x = e.x.toInt()
-        if (x in dates.indices) {
-            val selectedDate = dates[x]
+        if (x in sortedDates.indices) {
+            val selectedDate = sortedDates[x]
+            Log.d("SelDate", "selected date: $selectedDate")
             updateChartData(selectedDate)
 
             val transformer = lineChart.getTransformer(YAxis.AxisDependency.LEFT)
@@ -397,21 +410,20 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         }
     }
 
-
-
     override fun onNothingSelected() {
         TODO("Not yet implemented")//tu nic ma nie byc :)
     }
 
-    private fun updateDataOnScroll() {
+    private fun updateDataOnScroll(sortedDates: List<String>) {
         val centerX = (lineChart.lowestVisibleX + lineChart.highestVisibleX) / 2f
         val closestEntry = lineChart.data.getDataSetByIndex(0)
             ?.getEntryForXValue(centerX, Float.NaN, DataSet.Rounding.CLOSEST)
 
         closestEntry?.let { entry ->
             val index = entry.x.toInt()
-            if (index in dates.indices) {
-                val date = dates[index]
+            if (index in sortedDates.indices) {
+                val date = sortedDates[index]
+                Log.d("Progress", "date: $date")
                 updateChartData(date)
             }
         }
@@ -444,7 +456,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         return dailyProgress
     }
-    //nie liczy dobrze dni znaczy liczy ale czasem błąd wypierdala ze jakis losowy dzien napierdala
+
     private fun calculateDaysAgo(startDate: String, endDate: String): Int {
         val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
         dateFormat.timeZone = TimeZone.getTimeZone("UTC")
