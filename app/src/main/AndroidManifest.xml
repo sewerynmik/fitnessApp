@@ -15,12 +15,11 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/logo"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AplikacjaFitness"
+        android:theme="@style/AppTheme"
         tools:targetApi="31">
         <activity
             android:name=".Login"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -31,23 +30,19 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="false"
-            android:theme="@style/AppTheme"/>
+            android:exported="false"/>
 
         <activity
             android:name=".Register"
-            android:exported="false"
-            android:theme="@style/AppTheme" />
+            android:exported="false"/>
 
         <activity
             android:name=".Profile"
-            android:exported="false"
-            android:theme="@style/AppTheme"/>
+            android:exported="false"/>
 
         <activity
             android:name=".RegisterData"
-            android:exported="false"
-            android:theme="@style/AppTheme" />
+            android:exported="false"/>
 
         <activity
             android:name=".RegisterData2"
@@ -55,14 +50,16 @@
 
         <activity
             android:name=".Progress"
-            android:exported="false"
-            android:theme="@style/AppTheme" />
+            android:exported="false"/>
+
+        <activity
+            android:name=".MapActivity"
+            android:exported="false"/>
 
 
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
-
 
     </application>
 
