@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">FitnessApp</string>
+    <string name="menuMain">Main</string>
+    <string name="menuWorkout">Workout</string>
+    <string name="menuAap">Map</string>
+    <string name="menuProfile">profile</string>
 </resources>

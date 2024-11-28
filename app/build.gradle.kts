@@ -69,12 +69,16 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("com.google.accompanist:accompanist-permissions:0.31.2-alpha")
-    implementation("androidx.compose.ui:ui-text:1.5.4")
-    implementation("androidx.cardview:cardview:1.0.0")
-    implementation("com.google.android.material:material:1.9.0")
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.accompanist.permissions)
+    implementation(libs.androidx.ui.text)
+    implementation(libs.androidx.cardview)
+    implementation(libs.material)
+    //noinspection GradleDynamicVersion
     implementation("pl.droidsonroids.gif:android-gif-drawable:1.2.+")
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
-    implementation("de.hdodenhof:circleimageview:3.1.0")
+    implementation(libs.mpandroidchart)
+    implementation(libs.circleimageview)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+
 }

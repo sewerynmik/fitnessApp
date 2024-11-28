@@ -44,9 +44,10 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.ChartTouchListener
 import com.github.mikephil.charting.listener.OnChartGestureListener
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 
-class Progress : AppCompatActivity(), OnChartValueSelectedListener {
+class Progress : BaseActivity(), OnChartValueSelectedListener {
 
     private lateinit var lineChart: LineChart
     private lateinit var dbHelper: DatabaseHelper
@@ -92,17 +93,18 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
         updateChartData(currentDate)
 
-        val homeButton: ImageButton = findViewById(R.id.main)
-        homeButton.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-        }
 
         val addButton: ImageButton = findViewById(R.id.addButton)
         addButton.setOnClickListener {
             showAddProgressPopup()
         }
 
+        // bottom nav
+        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.menuBottom)
+        if (bottomNavigationView != null) {
+            setupBottomNavigation(bottomNavigationView)
+            bottomNavigationView.selectedItemId = R.id.workout
+        }
     }
 
     private fun setupLineChart() {
