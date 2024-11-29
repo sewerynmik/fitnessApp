@@ -148,8 +148,8 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         lineChart.axisLeft.isEnabled = false
         lineChart.axisRight.isEnabled = false
         lineChart.legend.isEnabled = false
-        lineChart.setHighlightPerTapEnabled(true)
-        lineChart.setHighlightPerDragEnabled(true)
+        lineChart.isHighlightPerTapEnabled = true
+        lineChart.isHighlightPerDragEnabled = true
         lineChart.setOnChartValueSelectedListener(this)
         lineChart.setScaleEnabled(false)
         lineChart.setPinchZoom(false)
