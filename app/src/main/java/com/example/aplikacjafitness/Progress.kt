@@ -382,7 +382,9 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
                 isWeightLoss = true
             }
 
-            val progressText = "${String.format("%.1f", dailyProgress)} kg\n Progress"
+            val previousDate = sortedDates[index - 1]
+
+            val progressText = "${String.format("%.1f", dailyProgress)} kg\n Progress ($previousDate)\n "
             val spannableString = SpannableString(progressText)
 
             val numberEndIndex = progressText.indexOf(" kg")
@@ -396,6 +398,13 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
                 RelativeSizeSpan(2f),
                 0,
                 numberEndIndex,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            val progressStartIndex = progressText.indexOf("\n") + 1 // Start after the newline
+            spannableString.setSpan(
+                RelativeSizeSpan(0.7f),
+                progressStartIndex,
+                progressText.length,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
 
@@ -444,7 +453,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
 
-                spannableString 
+                spannableString
             } else {
                 SpannableString("No progress data available")
             }
@@ -494,9 +503,10 @@ Log.d("Progress2", "centerX: $centerX")
         Log.d("Progress2","closestEntry: $closestEntry")
         if (closestEntry != null) {
             val dateIndex = closestEntry.x.toInt()
-            if (dateIndex in dates.indices) {
-                val date = dates[dateIndex]
-                Log.d("Progress", "date2: $date")
+            Log.d("Progress5", "dateIndex: $dateIndex")
+            if (dateIndex in sortedDates.indices) {
+                val date = sortedDates[dateIndex]
+                Log.d("Progress5", "date2: $date")
                 updateChartData(date,weightsList)
                 lineChart.centerViewToAnimated(dateIndex.toFloat(), 0f, YAxis.AxisDependency.LEFT, 300)
             }
