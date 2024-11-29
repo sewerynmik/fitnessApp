@@ -105,9 +105,10 @@ android:orientation="vertical">
                     android:id="@+id/progressWeight2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
+                    android:layout_gravity="center|center_vertical"
                     android:gravity="center"
-                    android:text="TextViewprogress weight from beginning of working" />
+                    android:text="TextViewprogress weight from beginning of working"
+                    android:textSize="14sp" />
             </androidx.cardview.widget.CardView>
 
             <androidx.cardview.widget.CardView

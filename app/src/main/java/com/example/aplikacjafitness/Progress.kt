@@ -24,7 +24,6 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.semantics.text
 import java.time.LocalDate
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
@@ -32,10 +31,7 @@ import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import com.github.mikephil.charting.utils.ColorTemplate
 import de.hdodenhof.circleimageview.CircleImageView
 import java.io.File
 import java.io.FileOutputStream
@@ -43,7 +39,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.text.toFloatOrNull
-import com.github.mikephil.charting.components.YAxis.AxisDependency.LEFT
 import com.github.mikephil.charting.data.DataSet
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.ChartTouchListener
@@ -409,23 +404,35 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             progressWeight.setTextColor(Color.GRAY)
         }
 // tutaj zmienic kololki
-        progressWeight2.text = {
+        progressWeight2.text = run {
             val dateIndex = sortedDates.indexOf(date)
-            if (dateIndex in weightsList.indices && dateIndex > 0) {
+            (if (dateIndex in weightsList.indices && dateIndex > 0) {
                 val firstWeight = weightsList[0]
                 val daysAgo = calculateDaysAgo(sortedDates[0], date)
-                val progressCompared = weightsList[dateIndex] - firstWeight
-                val progressText = "Compared with $daysAgo days ago:\n ${String.format("%.1f", progressCompared)} kg"
+                var progressCompared = weightsList[dateIndex] - firstWeight
+                var index2 = false
+                if (progressCompared<0) {index2 = true
+                progressCompared = progressCompared * -1}
+                val progressText =
+                    "Compared with $daysAgo days ago:\n ${
+                        String.format(
+                            "%.1f",
+                            progressCompared
+                        )
+                    } kg"
                 val spannableString = SpannableString(progressText)
 
                 val numberStartIndex = progressText.indexOf("\n ") + 2
+                Log.d("Progress4", "numberStartIndex: $numberStartIndex")
                 val numberEndIndex = progressText.indexOf(" kg")
+                Log.d("Progress4", "numberEndIndex: $numberEndIndex")
                 spannableString.setSpan(
-                    ForegroundColorSpan(if (progressCompared < 0) Color.GREEN else Color.RED),
+                    ForegroundColorSpan(if (index2 == true) Color.GREEN else Color.RED),
                     numberStartIndex,
                     numberEndIndex,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
+                Log.d("Progress4", "spannableString: $spannableString")
 
                 spannableString.setSpan(
                     RelativeSizeSpan(2f),
@@ -437,8 +444,8 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
                 spannableString
             } else {
                 "No progress data available"
-            }
-        }().toString()
+            }).toString()
+        }
     }
 
     override fun onValueSelected(e: Entry, h: Highlight) {
