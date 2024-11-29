@@ -24,6 +24,7 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.semantics.text
 import java.time.LocalDate
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
@@ -403,49 +404,50 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             progressWeight.text = "No progress data"
             progressWeight.setTextColor(Color.GRAY)
         }
-// tutaj zmienic kololki
+
+        //all works
         progressWeight2.text = run {
             val dateIndex = sortedDates.indexOf(date)
-            (if (dateIndex in weightsList.indices && dateIndex > 0) {
+            if (dateIndex in weightsList.indices && dateIndex > 0) {
                 val firstWeight = weightsList[0]
                 val daysAgo = calculateDaysAgo(sortedDates[0], date)
                 var progressCompared = weightsList[dateIndex] - firstWeight
                 var index2 = false
-                if (progressCompared<0) {index2 = true
+                if (progressCompared < 0) {
+                    index2 = true
                     progressCompared *= -1
                 }
-                val progressText =
-                    "Compared with $daysAgo days ago:\n ${
-                        String.format(
-                            "%.1f",
-                            progressCompared
-                        )
-                    } kg"
+
+                val progressText = "${String.format("%.1f", progressCompared)} kg\nCompared with $daysAgo days ago\n (${sortedDates[0]})"
                 val spannableString = SpannableString(progressText)
 
-                val numberStartIndex = progressText.indexOf("\n ") + 2
-                Log.d("Progress4", "numberStartIndex: $numberStartIndex")
                 val numberEndIndex = progressText.indexOf(" kg")
-                Log.d("Progress4", "numberEndIndex: $numberEndIndex")
                 spannableString.setSpan(
                     ForegroundColorSpan(if (index2 == true) Color.GREEN else Color.RED),
-                    numberStartIndex,
+                    0,
                     numberEndIndex,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
-                Log.d("Progress4", "spannableString: $spannableString")
 
                 spannableString.setSpan(
                     RelativeSizeSpan(2f),
-                    numberStartIndex,
+                    0,
                     numberEndIndex,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
 
-                spannableString
+                val comparedStartIndex = progressText.indexOf("Compared")
+                spannableString.setSpan(
+                    RelativeSizeSpan(0.7f),
+                    comparedStartIndex,
+                    progressText.length,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+
+                spannableString 
             } else {
-                "No progress data available"
-            }).toString()
+                SpannableString("No progress data available")
+            }
         }
     }
 
