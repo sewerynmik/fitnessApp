@@ -293,29 +293,45 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         }
     }
 
-    private fun saveImageToInternalStorage(imageUri: Uri?, weightInput: EditText) {
+    private fun saveImageToInternalStorage(imageUri: Uri?, weightInput: EditText): String? {
         imageUri?.let { uri ->
-            val contentResolver = contentResolver
-            val inputStream = contentResolver.openInputStream(uri)
-            val fileName = "progress_photo_${System.currentTimeMillis()}.jpg"
-            val file = File(filesDir, fileName)
-
             try {
-                val outputStream = FileOutputStream(file)
-                inputStream?.copyTo(outputStream)
-                outputStream.close()
-                inputStream?.close()
+                val contentResolver = contentResolver
+
+                val inputStream = contentResolver.openInputStream(uri)
+                if (inputStream == null) {
+                    Log.d("Progress7", "InputStream is null")
+                    return null
+                }
+
+                val fileName = "progress_photo_${System.currentTimeMillis()}.jpg"
+                val filesDir = filesDir
+                val file = File(filesDir, fileName)
+
+                FileOutputStream(file).use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                    outputStream.flush()
+                }
+
+                inputStream.close()
+
+                Log.d("Progress7", "Image saved successfully at: ${file.absolutePath}")
 
                 val userId = Utils.getUserIdFromSharedPreferences(this)
                 val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
                 val weight = weightInput.text.toString().toFloatOrNull() ?: 0f
                 dbHelper.insertWeightProgress(userId, currentDate, weight, fileName)
 
+                return fileName 
             } catch (e: Exception) {
                 e.printStackTrace()
+                Log.d("Progress7", "Failed to save image: $e")
+                return null
             }
         }
+        return null
     }
+
 
     companion object {
         private const val PICK_IMAGE_REQUEST = 1
