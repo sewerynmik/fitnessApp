@@ -412,7 +412,8 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
                 var progressCompared = weightsList[dateIndex] - firstWeight
                 var index2 = false
                 if (progressCompared<0) {index2 = true
-                progressCompared = progressCompared * -1}
+                    progressCompared *= -1
+                }
                 val progressText =
                     "Compared with $daysAgo days ago:\n ${
                         String.format(
