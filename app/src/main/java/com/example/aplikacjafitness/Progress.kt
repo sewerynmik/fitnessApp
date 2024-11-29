@@ -260,18 +260,22 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         cancelButton.setOnClickListener {
             popupWindow.dismiss()
+            loadLineChartData(sortedDates)
+            initChart(weightsList,sortedDates)
+
+
         }
 
         saveButton.setOnClickListener {
             val weight = weightInput.text.toString().toFloatOrNull() ?: 0f
             val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
             val userId = Utils.getUserIdFromSharedPreferences(this)
-
+            loadLineChartData(sortedDates)
+            initChart(weightsList,sortedDates)
             popupWindow.dismiss()
         }
 
         popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0)
-
         loadLineChartData(sortedDates)
     }
 
@@ -329,7 +333,12 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         val userData = dbHelper.getUserData(userId)
     Log.d("Progress", "w updatechartdata: $date + $data")
 
-        var weight = if (data.weight > 0) data.weight else userData.weight
+        val dateIndex = sortedDates.indexOf(date)
+        val weight = if (dateIndex in weightsList.indices) {
+            weightsList[dateIndex]
+        } else {
+            if (data.weight > 0) data.weight else userData.weight
+        }
         val height = userData.height
 
         val bmi = if (height > 0) {
