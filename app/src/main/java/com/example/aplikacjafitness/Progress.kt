@@ -5,10 +5,12 @@ import android.app.Dialog
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.InputType
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
@@ -235,18 +237,30 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         val displayMetrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(displayMetrics)
         val screenWidth = displayMetrics.widthPixels
-        val popupWidth = (screenWidth * 0.8).toInt()
+        val popupWidth = (screenWidth * 0.85).toInt()
 
-        val popupWindow = PopupWindow(popupView,
+        val popupWindow = PopupWindow(
+            popupView,
             popupWidth,
             LinearLayout.LayoutParams.WRAP_CONTENT,
-            true)
+            true
+        ).apply {
+            elevation = 10f
+            setBackgroundDrawable(ColorDrawable(Color.WHITE))
+        }
 
         weightInput = popupView.findViewById(R.id.weightInput)
+        weightInput.hint = "Enter your weight (kg)"
+        weightInput.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+
         val addPhotoButton: Button = popupView.findViewById(R.id.addPhotoButton)
         val cancelButton: Button = popupView.findViewById(R.id.cancelButton)
         val saveButton: Button = popupView.findViewById(R.id.saveButton)
 
+        addPhotoButton.text = "Add Photo"
+        cancelButton.text = "Cancel"
+        saveButton.text = "Save"
+        
         addPhotoButton.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             startActivityForResult(intent, PICK_IMAGE_REQUEST)
@@ -254,13 +268,15 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
         cancelButton.setOnClickListener {
             popupWindow.dismiss()
-            loadLineChartData(sortedDates)
-            initChart(weightsList,sortedDates)
-
         }
 
         saveButton.setOnClickListener {
-            val weight = weightInput.text.toString().toFloatOrNull() ?: 0f
+            val weight = weightInput.text.toString().toFloatOrNull()
+            if (weight == null || weight <= 0) {
+                Toast.makeText(this, "Please enter a valid weight!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
             val userId = Utils.getUserIdFromSharedPreferences(this)
 
@@ -271,8 +287,13 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             popupWindow.dismiss()
         }
 
+        val dimBackground = ColorDrawable(Color.BLACK).apply { alpha = 100 }
+        popupWindow.setBackgroundDrawable(dimBackground)
+        popupWindow.isFocusable = true
+        popupWindow.isOutsideTouchable = true
+        popupWindow.update()
+
         popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0)
-        loadLineChartData(sortedDates)
     }
 
 
@@ -318,7 +339,6 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         }
         return null
     }
-
 
     companion object {
         private const val PICK_IMAGE_REQUEST = 1
@@ -510,7 +530,6 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         dialog.show()
     }
 
-
     override fun onNothingSelected() {
 
     }
@@ -528,7 +547,6 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             }
         }
     }
-
 
     private fun snapToNearestDot() {
         val centerX = (lineChart.lowestVisibleX + lineChart.highestVisibleX) / 2f

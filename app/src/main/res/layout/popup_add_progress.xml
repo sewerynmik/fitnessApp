@@ -1,74 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_corners"
+    android:orientation="vertical"
+    android:padding="16dp">
 
-    <!-- Blurred background view -->
-      <View
-        android:id="@+id/blurView"
+    <!-- Weight Input -->
+
+    <!-- Add Photo Button -->
+
+    <!-- Cancel and Save Buttons -->
+
+    <EditText
+        android:id="@+id/weightInput"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/blur_background" />
-
-    <!-- Popup content -->
-    <LinearLayout
-        android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_alignParentStart="true" 
-        android:layout_alignParentEnd="true" 
-        android:background="@android:color/white"
-        android:elevation="4dp"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:hint="Enter your weight (kg)"
+        android:inputType="numberDecimal"
+        android:padding="12dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="Weight (kg):" />
+    <Button
+        android:id="@+id/addPhotoButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Add Photo" />
 
-        <EditText
-            android:id="@+id/weightInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="numberDecimal" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp"
-            android:text="Photos:" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
 
         <Button
-            android:id="@+id/addPhotoButton"
-            android:layout_width="wrap_content"
+            android:id="@+id/cancelButton"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Add Photo" />
+            android:layout_weight="1"
+            android:text="Cancel" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <Space
+            android:layout_width="8dp"
+            android:layout_height="match_parent" />
+
+        <Button
+            android:id="@+id/saveButton"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="end"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/cancelButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Cancel" />
-
-            <Button
-                android:id="@+id/saveButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
-                android:text="Save" />
-
-        </LinearLayout>
-
+            android:layout_weight="1"
+            android:text="Save" />
     </LinearLayout>
 
-</RelativeLayout>
+</LinearLayout>
