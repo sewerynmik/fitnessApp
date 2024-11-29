@@ -71,6 +71,8 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
 
     private lateinit var weightsList: List<Float>
 
+    private var photoFileName: String? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -270,8 +272,11 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
             val weight = weightInput.text.toString().toFloatOrNull() ?: 0f
             val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
             val userId = Utils.getUserIdFromSharedPreferences(this)
+
+            dbHelper.insertWeightProgress(userId, currentDate, weight, photoFileName)
+
             loadLineChartData(sortedDates)
-            initChart(weightsList,sortedDates)
+            initChart(weightsList, sortedDates)
             popupWindow.dismiss()
         }
 
@@ -284,7 +289,7 @@ class Progress : AppCompatActivity(), OnChartValueSelectedListener {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
             val selectedImageUri = data.data
-            saveImageToInternalStorage(selectedImageUri, weightInput)
+            photoFileName = saveImageToInternalStorage(selectedImageUri, weightInput).toString() // Store filename
         }
     }
 
