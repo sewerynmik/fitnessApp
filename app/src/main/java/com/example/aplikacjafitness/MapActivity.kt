@@ -18,8 +18,8 @@ import org.osmdroid.views.overlay.Marker
 class MapActivity : BaseActivity() {
 
     private lateinit var mapView: MapView
-
     private lateinit var locationManager: LocationManager
+    private var currentLocationMarker: Marker? = null
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
@@ -39,8 +39,8 @@ class MapActivity : BaseActivity() {
 
         checkLocationPermissions()
 
-        val mapCenterButton = findViewById<Button>(R.id.MapCenter)
-        mapCenterButton.setOnClickListener {
+        val centerButton = findViewById<Button>(R.id.MapCenter)
+        centerButton.setOnClickListener {
             centerOnCurrentLocation()
         }
 
@@ -52,14 +52,21 @@ class MapActivity : BaseActivity() {
         }
     }
 
-    private fun checkLocationPermissions(){
+    override fun onResume() {
+        super.onResume()
+
+        checkLocationPermissions()
+    }
+
+    private fun checkLocationPermissions() {
         if (ActivityCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) != PackageManager.PERMISSION_GRANTED) {
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(
@@ -79,12 +86,11 @@ class MapActivity : BaseActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 getCurrentLocation()
             } else {
-                Log.e("MapActivity", "Location permission denied")
+                Log.e("MapActivity", "Uprawnienia lokalizacji zostały odrzucone.")
             }
         }
     }
@@ -95,10 +101,10 @@ class MapActivity : BaseActivity() {
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+            ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
@@ -110,15 +116,18 @@ class MapActivity : BaseActivity() {
 
                         mapView.controller.setCenter(currentGeoPoint)
 
-                        val marker = Marker(mapView)
-                        marker.position = currentGeoPoint
-                        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                        mapView.overlays.add(marker)
+                        currentLocationMarker?.let { mapView.overlays.remove(it) }
+
+                        currentLocationMarker = Marker(mapView).apply {
+                            position = currentGeoPoint
+                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                            icon = resources.getDrawable(R.drawable.ic_map_marker, null)
+                        }
+                        mapView.overlays.add(currentLocationMarker)
 
                         locationManager.removeUpdates(this)
                     }
 
-                    @Deprecated("Deprecated in Java")
                     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
                     override fun onProviderEnabled(provider: String) {}
                     override fun onProviderDisabled(provider: String) {}
@@ -139,6 +148,15 @@ class MapActivity : BaseActivity() {
             locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let { location ->
                 val currentGeoPoint = GeoPoint(location.latitude, location.longitude)
                 mapView.controller.animateTo(currentGeoPoint)
+
+                currentLocationMarker?.let { mapView.overlays.remove(it) }
+
+                currentLocationMarker = Marker(mapView).apply {
+                    position = currentGeoPoint
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    icon = resources.getDrawable(R.drawable.ic_map_marker, null)
+                }
+                mapView.overlays.add(currentLocationMarker)
             } ?: Log.e("MapActivity", "Nie można pobrać ostatniej znanej lokalizacji.")
         } else {
             Log.e("MapActivity", "Brak uprawnień do lokalizacji.")
