@@ -20,7 +20,7 @@ import pl.droidsonroids.gif.GifImageView
 import androidx.appcompat.app.AlertDialog
 import pl.droidsonroids.gif.GifDrawable
 
-class Login : AppCompatActivity() {
+class Login : BaseActivity() {
 
     private lateinit var dbHelper: DatabaseHelper
     private lateinit var db: SQLiteDatabase

@@ -9,7 +9,7 @@ import android.widget.Toast
 import android.widget.Button
 import androidx.compose.ui.semantics.text
 
-class Register : AppCompatActivity() {
+class Register : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
