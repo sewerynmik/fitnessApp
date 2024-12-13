@@ -1,6 +1,7 @@
 package com.example.aplikacjafitness
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
@@ -14,12 +15,15 @@ import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polyline
 
 class MapActivity : BaseActivity() {
 
     private lateinit var mapView: MapView
     private lateinit var locationManager: LocationManager
     private var currentLocationMarker: Marker? = null
+    private val routePoints = mutableListOf<GeoPoint>()
+    private var polyline: Polyline? = null
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
@@ -77,6 +81,7 @@ class MapActivity : BaseActivity() {
             )
         } else {
             getCurrentLocation()
+            centerOnCurrentLocation()
         }
     }
 
@@ -111,8 +116,12 @@ class MapActivity : BaseActivity() {
                 0,
                 0f,
                 object : LocationListener {
+                    @SuppressLint("UseCompatLoadingForDrawables")
                     override fun onLocationChanged(location: Location) {
                         val currentGeoPoint = GeoPoint(location.latitude, location.longitude)
+
+                        routePoints.add(currentGeoPoint)
+                        drawRoute()
 
                         mapView.controller.setCenter(currentGeoPoint)
 
@@ -128,6 +137,7 @@ class MapActivity : BaseActivity() {
                         locationManager.removeUpdates(this)
                     }
 
+                    @Deprecated("Deprecated in Java")
                     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
                     override fun onProviderEnabled(provider: String) {}
                     override fun onProviderDisabled(provider: String) {}
@@ -136,6 +146,7 @@ class MapActivity : BaseActivity() {
         }
     }
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     private fun centerOnCurrentLocation() {
         if (ActivityCompat.checkSelfPermission(
                 this,
@@ -161,5 +172,18 @@ class MapActivity : BaseActivity() {
         } else {
             Log.e("MapActivity", "Brak uprawnień do lokalizacji.")
         }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun drawRoute(){
+        polyline?.let { mapView.overlays.remove(it) }
+
+        polyline = Polyline(mapView).apply {
+            setPoints(routePoints)
+            color = resources.getColor(R.color.blue, null)
+            width = 8f
+        }
+
+        mapView.overlays.add(polyline)
     }
 }
