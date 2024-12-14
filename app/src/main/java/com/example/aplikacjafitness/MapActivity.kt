@@ -25,10 +25,16 @@ class MapActivity : BaseActivity() {
     private val routePoints = mutableListOf<GeoPoint>()
     private var polyline: Polyline? = null
 
+    private var isTracking: Boolean = false
+    private var totalDistance: Double = 0.0
+    private var startTime: Long = 0
+    private var elapsedTime: Long = 0
+
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -46,6 +52,17 @@ class MapActivity : BaseActivity() {
         val centerButton = findViewById<Button>(R.id.MapCenter)
         centerButton.setOnClickListener {
             centerOnCurrentLocation()
+        }
+
+        val startRunButton = findViewById<Button>(R.id.startRun)
+        startRunButton.setOnClickListener {
+            if (!isTracking) {
+                startRunButton.text = "Stop"
+                startRun()
+            } else {
+                startRunButton.text = "Start"
+                stopRun()
+            }
         }
 
         // bottom nav
@@ -120,11 +137,6 @@ class MapActivity : BaseActivity() {
                     override fun onLocationChanged(location: Location) {
                         val currentGeoPoint = GeoPoint(location.latitude, location.longitude)
 
-                        routePoints.add(currentGeoPoint)
-                        drawRoute()
-
-                        mapView.controller.setCenter(currentGeoPoint)
-
                         currentLocationMarker?.let { mapView.overlays.remove(it) }
 
                         currentLocationMarker = Marker(mapView).apply {
@@ -132,9 +144,28 @@ class MapActivity : BaseActivity() {
                             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                             icon = resources.getDrawable(R.drawable.ic_map_marker, null)
                         }
+
                         mapView.overlays.add(currentLocationMarker)
 
-                        locationManager.removeUpdates(this)
+                        if (isTracking) {
+
+                            if (routePoints.isNotEmpty()) {
+                                val lastPoint = routePoints.last()
+                                val result = FloatArray(1)
+
+                                Location.distanceBetween(
+                                    lastPoint.latitude, lastPoint.longitude,
+                                    currentGeoPoint.latitude, currentGeoPoint.longitude,
+                                    result)
+
+                                totalDistance += result[0]
+                            }
+
+                            routePoints.add(currentGeoPoint)
+                            drawRoute()
+
+                        }
+
                     }
 
                     @Deprecated("Deprecated in Java")
@@ -159,15 +190,6 @@ class MapActivity : BaseActivity() {
             locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let { location ->
                 val currentGeoPoint = GeoPoint(location.latitude, location.longitude)
                 mapView.controller.animateTo(currentGeoPoint)
-
-                currentLocationMarker?.let { mapView.overlays.remove(it) }
-
-                currentLocationMarker = Marker(mapView).apply {
-                    position = currentGeoPoint
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    icon = resources.getDrawable(R.drawable.ic_map_marker, null)
-                }
-                mapView.overlays.add(currentLocationMarker)
             } ?: Log.e("MapActivity", "Nie można pobrać ostatniej znanej lokalizacji.")
         } else {
             Log.e("MapActivity", "Brak uprawnień do lokalizacji.")
@@ -185,5 +207,22 @@ class MapActivity : BaseActivity() {
         }
 
         mapView.overlays.add(polyline)
+    }
+
+    private fun startRun(){
+        isTracking = true
+        routePoints.clear()
+        totalDistance = 0.0
+        startTime = System.currentTimeMillis()
+        elapsedTime = 0
+    }
+
+    private fun stopRun(){
+        isTracking = false
+        elapsedTime = System.currentTimeMillis() - startTime
+        val averageSpeed = totalDistance / (elapsedTime / 1000.0 / 60.0)
+        Log.d("MapActivity", "Total distance: $totalDistance meters")
+        Log.d("MapActivity", "Elapsed time: $elapsedTime milliseconds")
+        Log.d("MapActivity", "Average speed: $averageSpeed meters per minute")
     }
 }
