@@ -49,6 +49,8 @@ class MapActivity : BaseActivity() {
 
         checkLocationPermissions()
 
+        getCurrentLocation()
+
         val centerButton = findViewById<Button>(R.id.MapCenter)
         centerButton.setOnClickListener {
             centerOnCurrentLocation()
@@ -117,6 +119,7 @@ class MapActivity : BaseActivity() {
         }
     }
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     private fun getCurrentLocation() {
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
 
@@ -128,12 +131,26 @@ class MapActivity : BaseActivity() {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
+            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let { location ->
+                val currentGeoPoint = GeoPoint(location.latitude, location.longitude)
+
+                currentLocationMarker?.let { mapView.overlays.remove(it) }
+
+                currentLocationMarker = Marker(mapView).apply {
+                    position = currentGeoPoint
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    icon = resources.getDrawable(R.drawable.ic_map_marker, null)
+                }
+
+                mapView.overlays.add(currentLocationMarker)
+                mapView.controller.animateTo(currentGeoPoint)
+            }
+
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
                 0,
                 0f,
                 object : LocationListener {
-                    @SuppressLint("UseCompatLoadingForDrawables")
                     override fun onLocationChanged(location: Location) {
                         val currentGeoPoint = GeoPoint(location.latitude, location.longitude)
 
