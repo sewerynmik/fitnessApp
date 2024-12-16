@@ -1,7 +1,6 @@
 package com.example.aplikacjafitness
 
 import android.app.Activity
-import android.app.Dialog
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -24,7 +23,6 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.semantics.text
 import java.time.LocalDate
@@ -95,6 +93,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         dbHelper = DatabaseHelper(this)
         lineChart = findViewById(R.id.lineChartProgress)
 
+//okej
         val (weights, initialSortedDates) = dbHelper.getWeightProgress(userId)
         val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault())
         sortedDates = initialSortedDates.sortedBy {
@@ -102,6 +101,8 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         }
         val sort = sortedDates.last()
 
+        Log.d("SortedDates", "sorted dates: $sortedDates")
+        Log.d("SortedDates", "sort: $sort")
 
         lineChart.setOnChartValueSelectedListener(this)
 
@@ -112,6 +113,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         loadProfilePictureForButton()
 
         val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
+        Log.d("Progress", "current date: $currentDate")
         updateChartData(currentDate,weightsList)
 
 
@@ -121,7 +123,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         }
         if (sortedDates.isNotEmpty() && weights.isNotEmpty()) {
             val latestDate = sortedDates.last()
-
+            //tu okej
             updateChartData(latestDate,weightsList)
 
             initChart(weights, sortedDates)
@@ -150,15 +152,12 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         lineChart.axisLeft.isEnabled = false
         lineChart.axisRight.isEnabled = false
         lineChart.legend.isEnabled = false
-        lineChart.setHighlightPerTapEnabled(true)
-        lineChart.setHighlightPerDragEnabled(true)
-        lineChart.setOnChartValueSelectedListener(this)
+        lineChart.setHighlightPerTapEnabled(false)
+        lineChart.setHighlightPerDragEnabled(false)
+        lineChart.setOnChartValueSelectedListener(null)
         lineChart.setScaleEnabled(false)
         lineChart.setPinchZoom(false)
         lineChart.isDragEnabled = true
-        lineChart.isClickable = true
-        lineChart.isEnabled = true
-
 
         lineChart.setOnChartGestureListener(object : OnChartGestureListener {
             override fun onChartGestureStart(me: MotionEvent?, lastPerformedGesture: ChartTouchListener.ChartGesture?) {}
@@ -186,6 +185,8 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
         val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
 
+        Log.d("Progress2", "Initial data - Dates: $initialDates, Weights: $weights")
+
         val parsedData = initialDates.mapIndexedNotNull { index, date ->
             try {
                 dateFormat.parse(date)?.let { it to weights[index] }
@@ -197,11 +198,13 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
         val sortedDates = parsedData.map { dateFormat.format(it.first) }
         val sortedWeights = parsedData.map { it.second }
+    Log.d("Progress2", "sorted datesss: $sortedDates + $sortedWeights")
         val valueToDateMap = mutableMapOf<Float, String>()
         for (i in weights.indices) {
             entries.add(Entry(i.toFloat(), weights[i]))
             valueToDateMap[i.toFloat()] = sortedDates[i]
-        }
+        }//powrut
+        Log.d("Progress2", "entries: $entries")
         weightsList = weights
         val dataSet = LineDataSet(entries, "Weight")
 
@@ -224,12 +227,17 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         if (targetIndex in 0 until entries.size) {
             lineChart.setVisibleXRangeMaximum(7f)
             lineChart.moveViewToX(targetIndex.toFloat())
+            Log.d("Sorted", "sorted index: $sortedDates")
+            //tu okej
             updateChartData(sortedDates[targetIndex],weights)
         } else {
             lineChart.moveViewToX(0f)
         }
 
+       // lineChart.invalidate()
     }
+
+
 
     private fun showAddProgressPopup() {
         val popupView = layoutInflater.inflate(R.layout.popup_add_progress, null)
@@ -259,6 +267,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
             loadLineChartData(sortedDates)
             initChart(weightsList,sortedDates)
 
+
         }
 
         saveButton.setOnClickListener {
@@ -282,7 +291,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
             val selectedImageUri = data.data
-            photoFileName = saveImageToInternalStorage(selectedImageUri, weightInput).toString()
+            photoFileName = saveImageToInternalStorage(selectedImageUri, weightInput).toString() // Store filename
         }
     }
 
@@ -293,6 +302,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
                 val inputStream = contentResolver.openInputStream(uri)
                 if (inputStream == null) {
+                    Log.d("Progress7", "InputStream is null")
                     return null
                 }
 
@@ -307,14 +317,17 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
                 inputStream.close()
 
+                Log.d("Progress7", "Image saved successfully at: ${file.absolutePath}")
+
                 val userId = Utils.getUserIdFromSharedPreferences(this)
                 val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
                 val weight = weightInput.text.toString().toFloatOrNull() ?: 0f
                 dbHelper.insertWeightProgress(userId, currentDate, weight, fileName)
 
-                return fileName
+                return fileName 
             } catch (e: Exception) {
                 e.printStackTrace()
+                Log.d("Progress7", "Failed to save image: $e")
                 return null
             }
         }
@@ -341,6 +354,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         val userId = Utils.getUserIdFromSharedPreferences(this)
         val data = dbHelper.getDataForDate(date)
         val userData = dbHelper.getUserData(userId)
+    Log.d("Progress", "w updatechartdata: $date + $data")
 
         val dateIndex = sortedDates.indexOf(date)
         val weight = if (dateIndex in weightsList.indices) {
@@ -355,6 +369,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         } else {
             0f
         }
+        Log.d("Weightlista","wsg $weightsList")
 
     weightProg.text = {
         val dateIndex = sortedDates.indexOf(date)
@@ -417,7 +432,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
                 numberEndIndex,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
-            val progressStartIndex = progressText.indexOf("\n") + 1
+            val progressStartIndex = progressText.indexOf("\n") + 1 // Start after the newline
             spannableString.setSpan(
                 RelativeSizeSpan(0.7f),
                 progressStartIndex,
@@ -431,6 +446,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
             progressWeight.setTextColor(Color.GRAY)
         }
 
+        //all works
         progressWeight2.text = run {
             val dateIndex = sortedDates.indexOf(date)
             if (dateIndex in weightsList.indices && dateIndex > 0) {
@@ -478,43 +494,21 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
     override fun onValueSelected(e: Entry, h: Highlight) {
         val x = e.x.toInt()
+        Log.d("SelDate", "x: $x")
         if (x in sortedDates.indices) {
             val selectedDate = sortedDates[x]
-            updateChartData(selectedDate, weightsList)
+            Log.d("SelDate", "selected date: $selectedDate")
+            updateChartData(selectedDate,weightsList)
 
-            val userId = Utils.getUserIdFromSharedPreferences(this)
-            val imageFilePath = dbHelper.getImageForDate(userId, selectedDate)
-            if (!imageFilePath.isNullOrEmpty()) {
-                showImageDialog(imageFilePath)
-            } else {
-                Toast.makeText(this, "No image available for this date", Toast.LENGTH_SHORT).show()
-            }
+            val transformer = lineChart.getTransformer(YAxis.AxisDependency.LEFT)
+            val arrowX = transformer.getPixelForValues(x.toFloat(), 0f).x
+            Log.d("Progress2","Strzalka: $arrowX")
+            arrowTopProg.x = (arrowX - arrowTopProg.width / 2f).toFloat()
         }
     }
-
-    private fun showImageDialog(imagePath: String) {
-        val dialog = Dialog(this)
-        dialog.setContentView(R.layout.dialog_image)
-        val imageView = dialog.findViewById<ImageView>(R.id.imageView)
-
-        val file = File(filesDir, imagePath)
-        if (file.exists()) {
-            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-            imageView.setImageBitmap(bitmap)
-        } else {
-            imageView.setImageResource(R.drawable.person)
-        }
-
-        dialog.findViewById<Button>(R.id.closeButton).setOnClickListener {
-            dialog.dismiss()
-        }
-
-        dialog.show()
-    }
-
 
     override fun onNothingSelected() {
-
+        TODO("Not yet implemented")//tu nic ma nie byc :)
     }
 
     private fun updateDataOnScroll(sortedDates: List<String>) {
@@ -526,6 +520,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
             val index = entry.x.toInt()
             if (index in sortedDates.indices) {
                 val date = sortedDates[index]
+                Log.d("Progress", "Tu git: $sortedDates")
                 updateChartData(date,weightsList)
             }
         }
@@ -534,12 +529,16 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
     private fun snapToNearestDot() {
         val centerX = (lineChart.lowestVisibleX + lineChart.highestVisibleX) / 2f
+Log.d("Progress2", "centerX: $centerX")
         val closestEntry = lineChart.data.getDataSetByIndex(0)
             ?.getEntryForXValue(centerX, Float.NaN, DataSet.Rounding.CLOSEST)
+        Log.d("Progress2","closestEntry: $closestEntry")
         if (closestEntry != null) {
             val dateIndex = closestEntry.x.toInt()
+            Log.d("Progress5", "dateIndex: $dateIndex")
             if (dateIndex in sortedDates.indices) {
                 val date = sortedDates[dateIndex]
+                Log.d("Progress5", "date2: $date")
                 updateChartData(date,weightsList)
                 lineChart.centerViewToAnimated(dateIndex.toFloat(), 0f, YAxis.AxisDependency.LEFT, 300)
             }
@@ -564,6 +563,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         return try {
             val start = dateFormat.parse("$startDate UTC")
             val end = dateFormat.parse("$endDate UTC")
+            Log.d("DaysAgo", "Start: $start, End: $end")
 
             if (start != null && end != null) {
                 val differenceInMillis = end.time - start.time
@@ -581,6 +581,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         val entries = weights.mapIndexed { index, weight ->
             Entry(index.toFloat(), weight)
         }
+Log.d("Progress2", "wyswietlanie dobrze: $entries")
         val dataSet = LineDataSet(entries, "Weight Progress").apply {
             color = Color.GREEN
             valueTextColor = Color.BLACK
@@ -590,7 +591,6 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
             setDrawCircles(true)
             setDrawValues(false)
             mode = LineDataSet.Mode.CUBIC_BEZIER
-
 
 
             val gradientDrawable = GradientDrawable(
@@ -607,8 +607,6 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         val lineData = LineData(dataSet)
         lineChart.data = lineData
         lineChart.description.isEnabled = false
-        lineChart.isClickable = true
-        lineChart.isEnabled = true
         lineChart.invalidate()
     }
 

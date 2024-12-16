@@ -304,26 +304,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     data class WeightAllData(val weight: Float, val date: String)
 
-    fun getImageForDate(userId: Int, date: String): String? {
-        val db = this.readableDatabase
-        val query = "SELECT pic_name FROM weight_progress WHERE user_id = ? AND date = ?"
-        val cursor = db.rawQuery(query, arrayOf(userId.toString(), date))
-
-        return if (cursor.moveToFirst()) {
-            cursor.getString(cursor.getColumnIndexOrThrow("pic_name"))
-        } else {
-            null
-        }.also {
-            cursor.close()
-        }
-    }
-
 }
 
     data class UserData(val height: Float, val weight: Float)
-
-
-
 
 
 
