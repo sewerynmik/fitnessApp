@@ -11,9 +11,18 @@ composeBom = "2024.04.01"
 constraintlayout = "2.2.0"
 material = "1.12.0"
 firebaseDatabase = "21.0.0"
+mpandroidchart = "v3.1.0"
+navigationFragmentKtx = "2.8.4"
+uiText = "1.7.5"
 
 [libraries]
+accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
+androidx-cardview = { module = "androidx.cardview:cardview", version.ref = "cardview" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-navigation-fragment-ktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
+androidx-navigation-ui-ktx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navigationFragmentKtx" }
+androidx-ui-text = { module = "androidx.compose.ui:ui-text", version.ref = "uiText" }
+circleimageview = { module = "de.hdodenhof:circleimageview", version.ref = "circleimageview" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -30,6 +39,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchart" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
