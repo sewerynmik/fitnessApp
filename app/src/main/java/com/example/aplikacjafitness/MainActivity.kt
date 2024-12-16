@@ -300,6 +300,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         val last7DaysSteps = dbHelper.getLast7DaysSteps(userId)
         val xAxisLabels = ArrayList<String>()
         val averageSteps = last7DaysSteps.average().toFloat()
+        val maxValue = last7DaysSteps.maxOrNull()?.toFloat() ?: 0f
 
         val calendar = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("dd", java.util.Locale.getDefault())
@@ -340,7 +341,10 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         lineChart.xAxis.granularity = 1f
         lineChart.xAxis.setDrawLabels(true)
         lineChart.xAxis.setDrawGridLines(false)
+        lineChart.axisLeft.axisMaximum = maxValue * 1.3f
+        lineChart.axisLeft.axisMinimum = 2f
 
+        lineChart.axisLeft.isEnabled = true
         lineChart.description.isEnabled = false
         lineChart.legend.isEnabled = false
         lineChart.axisLeft.isEnabled = false
