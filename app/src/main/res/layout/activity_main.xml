@@ -183,15 +183,52 @@
 
     </androidx.cardview.widget.CardView>
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
+    <androidx.cardview.widget.CardView
         android:id="@+id/menuBottom"
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        style="@style/BottomNavTheme"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="36dp"
+        android:layout_weight="1"
+        android:background="#00FFFFFF"
+        android:backgroundTint="#00FFFFFF"
+        android:outlineAmbientShadowColor="#00FFFFFF"
+        android:outlineSpotShadowColor="#00FFFFFF"
+        app:cardBackgroundColor="#00FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/thCard"
-        app:menu="@menu/main_menu" />
+        app:layout_constraintTop_toBottomOf="@+id/thCard">
+
+        <ImageButton
+            android:id="@+id/main"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="left"
+            android:layout_marginRight="200dp"
+            android:background="@drawable/home"
+            android:backgroundTint="#000000"
+            android:contentDescription="main"
+            app:srcCompat="@drawable/home" />
+
+        <ImageButton
+            android:id="@+id/workout"
+            android:layout_width="60dp"
+            android:layout_height="59dp"
+            android:layout_gravity="center"
+            android:background="@drawable/workout"
+            android:backgroundTint="#000000"
+            android:contentDescription="workout"
+            app:srcCompat="@drawable/workout" />
+
+        <ImageButton
+            android:id="@+id/progressBtn"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="right"
+            android:background="@drawable/progress"
+            android:backgroundTint="#000000"
+            android:contentDescription="profile"
+            app:srcCompat="@drawable/progress" />
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

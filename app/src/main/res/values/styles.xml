@@ -1,16 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
-    </style>
-
-    <style name="BottomNavTheme" parent="Widget.Design.BottomNavigationView">
-        <item name="backgroundTint">@color/bottom_nav_color</item>
-        <item name="labelVisibilityMode">selected</item>
-        <item name="itemIconTint">@color/bottom_nav_icon_inactive</item>
-        <item name="itemTextColor">@color/bottom_nav_icon_inactive</item>
-        <item name="itemRippleColor">@null</item>
     </style>
 
 </resources>

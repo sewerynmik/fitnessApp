@@ -34,11 +34,10 @@ import androidx.activity.result.launch
 import java.io.File
 import kotlin.io.path.exists
 import android.provider.MediaStore
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.io.FileOutputStream
 
 
-class Profile : BaseActivity() {
+class Profile : AppCompatActivity() {
 
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var profEmailTextView: TextView
@@ -70,11 +69,16 @@ class Profile : BaseActivity() {
             showEditProfilePopup()
         }
 
-        // bottom nav
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.menuBottom)
-        if (bottomNavigationView != null) {
-            setupBottomNavigation(bottomNavigationView)
-            bottomNavigationView.selectedItemId = R.id.profile
+        val homeButton: ImageButton = findViewById(R.id.main)
+        homeButton.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
+
+        val progressButton: ImageButton = findViewById(R.id.progressBtn)
+        progressButton.setOnClickListener {
+            val intent = Intent(this, Progress::class.java)
+            startActivity(intent)
         }
 
         val logOutButton: TextView = findViewById(R.id.logOut)
