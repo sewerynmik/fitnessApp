@@ -1,12 +1,12 @@
 package com.example.aplikacjafitness
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -15,26 +15,14 @@ import android.hardware.SensorManager
 import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
-import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.add
-import androidx.compose.ui.input.key.type
-import androidx.compose.ui.semantics.text
-import androidx.compose.ui.text.intl.Locale
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import kotlin.text.format
-import kotlin.text.toIntOrNull
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
@@ -43,14 +31,17 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
-import android.graphics.Color
-import androidx.core.text.color
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import de.hdodenhof.circleimageview.CircleImageView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import java.io.File
-import kotlin.io.path.exists
+import java.text.SimpleDateFormat
+import java.util.Date
 
 
-class MainActivity : ComponentActivity(), SensorEventListener {
+class MainActivity : BaseActivity(), SensorEventListener {
 
     private lateinit var dbHelper: DatabaseHelper
     private lateinit var db: SQLiteDatabase
@@ -194,11 +185,12 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             startActivity(intent)
         }
 
-        val ProgressButton: ImageButton = findViewById(R.id.progressBtn)
 
-        ProgressButton.setOnClickListener {
-            val intent = Intent(this, Progress::class.java)
-            startActivity(intent)
+        // bottom nav
+        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.menuBottom)
+        if (bottomNavigationView != null) {
+            setupBottomNavigation(bottomNavigationView)
+            bottomNavigationView.selectedItemId = R.id.main
         }
 
     }
