@@ -9,31 +9,19 @@
         android:id="@+id/startRun"
         android:layout_width="75dp"
         android:layout_height="50dp"
+        android:layout_marginBottom="10dp"
         android:text="@string/start"
-        android:layout_marginStart="10dp"
-        android:layout_marginBottom="10dp"
         app:layout_constraintBottom_toTopOf="@+id/menuBottom"
-        app:layout_constraintStart_toEndOf="@+id/MapCenter"
-        tools:ignore="SpeakableTextPresentCheck" />
-
-    <Button
-        android:id="@+id/MapCenter"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginBottom="10dp"
-        app:layout_constraintBottom_toTopOf="@+id/menuBottom"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:ignore="SpeakableTextPresentCheck" />
 
-    <org.osmdroid.views.MapView
-        android:id="@+id/map"
+    <fragment
+        android:id="@+id/mapView"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:layout_editor_absoluteX="158dp"
-        tools:layout_editor_absoluteY="280dp">
-
-    </org.osmdroid.views.MapView>
+        tools:ignore="FragmentTagUsage" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/menuBottom"

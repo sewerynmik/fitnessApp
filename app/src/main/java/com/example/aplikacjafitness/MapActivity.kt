@@ -1,245 +1,150 @@
 package com.example.aplikacjafitness
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
+import android.graphics.Color
 import android.os.Bundle
+import android.os.Looper
 import android.util.Log
 import android.widget.Button
 import androidx.core.app.ActivityCompat
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import org.osmdroid.config.Configuration
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.Polyline
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.PolylineOptions
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlin.math.sqrt
 
-class MapActivity : BaseActivity() {
+class MapActivity : BaseActivity(), OnMapReadyCallback {
 
-    private lateinit var mapView: MapView
-    private lateinit var locationManager: LocationManager
-    private var currentLocationMarker: Marker? = null
-    private val routePoints = mutableListOf<GeoPoint>()
-    private var polyline: Polyline? = null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var locationRequest: LocationRequest
+    private lateinit var locationCallback: LocationCallback
+    private var tracking = false
+    private val routePoints = mutableListOf<LatLng>()
+    private var totalDistance = 0.0
+    private lateinit var map: GoogleMap
 
-    private var isTracking: Boolean = false
-    private var totalDistance: Double = 0.0
-    private var startTime: Long = 0
-    private var elapsedTime: Long = 0
-
-    companion object {
-        private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
-    }
-
-    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        Configuration.getInstance().userAgentValue = packageName
-
         setContentView(R.layout.activity_map)
 
-        mapView = findViewById(R.id.map)
-        mapView.setMultiTouchControls(true)
-        mapView.controller.setZoom(15.0)
-        mapView.controller.setCenter(GeoPoint(52.237049, 21.017532))
+        val mapFragment = supportFragmentManager
+            .findFragmentById(R.id.mapView) as SupportMapFragment
+        mapFragment.getMapAsync(this)
 
-        checkLocationPermissions()
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        getCurrentLocation()
+        // Inicjalizacja LocationRequest
+        locationRequest = LocationRequest.Builder(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            5000L // Czas w milisekundach pomiędzy aktualizacjami
+        ).build()
 
-        val centerButton = findViewById<Button>(R.id.MapCenter)
-        centerButton.setOnClickListener {
-            centerOnCurrentLocation()
-        }
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                val location = locationResult.lastLocation ?: return
+                val newPoint = LatLng(location.latitude, location.longitude)
 
-        val startRunButton = findViewById<Button>(R.id.startRun)
-        startRunButton.setOnClickListener {
-            if (!isTracking) {
-                startRunButton.text = "Stop"
-                startRun()
-            } else {
-                startRunButton.text = "Start"
-                stopRun()
+                if (routePoints.isNotEmpty()) {
+                    val lastPoint = routePoints.last()
+                    val distance = calculateDistance(lastPoint, newPoint)
+                    totalDistance += distance
+
+                    map.addPolyline(
+                        PolylineOptions().add(lastPoint, newPoint).color(Color.RED).width(5f)
+                    )
+                }
+
+                routePoints.add(newPoint)
+                map.moveCamera(CameraUpdateFactory.newLatLng(newPoint))
             }
         }
 
-        // bottom nav
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.menuBottom)
-        if (bottomNavigationView != null) {
-            setupBottomNavigation(bottomNavigationView)
-            bottomNavigationView.selectedItemId = R.id.map
+        findViewById<Button>(R.id.startRun).setOnClickListener {
+            tracking = !tracking
+            if (tracking) {
+                routePoints.clear()
+                totalDistance = 0.0
+                (it as Button).text = "Stop"
+                startTracking()
+            } else {
+                (it as Button).text = "Start"
+                stopTracking()
+            }
         }
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onMapReady(googleMap: GoogleMap) {
+        map = googleMap
 
-        checkLocationPermissions()
-    }
-
-    private fun checkLocationPermissions() {
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ),
-                LOCATION_PERMISSION_REQUEST_CODE
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                1
             )
-        } else {
-            getCurrentLocation()
-            centerOnCurrentLocation()
+            return
         }
+
+        map.isMyLocationEnabled = true
+        map.uiSettings.isMyLocationButtonEnabled = true
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getCurrentLocation()
-            } else {
-                Log.e("MapActivity", "Uprawnienia lokalizacji zostały odrzucone.")
-            }
-        }
-    }
-
-    @SuppressLint("UseCompatLoadingForDrawables")
-    private fun getCurrentLocation() {
-        locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-
+    private fun startTracking() {
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
-            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let { location ->
-                val currentGeoPoint = GeoPoint(location.latitude, location.longitude)
-
-                currentLocationMarker?.let { mapView.overlays.remove(it) }
-
-                currentLocationMarker = Marker(mapView).apply {
-                    position = currentGeoPoint
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    icon = resources.getDrawable(R.drawable.ic_map_marker, null)
-                }
-
-                mapView.overlays.add(currentLocationMarker)
-                mapView.controller.animateTo(currentGeoPoint)
-            }
-
-            locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER,
-                0,
-                0f,
-                object : LocationListener {
-                    override fun onLocationChanged(location: Location) {
-                        val currentGeoPoint = GeoPoint(location.latitude, location.longitude)
-
-                        currentLocationMarker?.let { mapView.overlays.remove(it) }
-
-                        currentLocationMarker = Marker(mapView).apply {
-                            position = currentGeoPoint
-                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            icon = resources.getDrawable(R.drawable.ic_map_marker, null)
-                        }
-
-                        mapView.overlays.add(currentLocationMarker)
-
-                        if (isTracking) {
-
-                            if (routePoints.isNotEmpty()) {
-                                val lastPoint = routePoints.last()
-                                val result = FloatArray(1)
-
-                                Location.distanceBetween(
-                                    lastPoint.latitude, lastPoint.longitude,
-                                    currentGeoPoint.latitude, currentGeoPoint.longitude,
-                                    result)
-
-                                totalDistance += result[0]
-                            }
-
-                            routePoints.add(currentGeoPoint)
-                            drawRoute()
-
-                        }
-
-                    }
-
-                    @Deprecated("Deprecated in Java")
-                    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-                    override fun onProviderEnabled(provider: String) {}
-                    override fun onProviderDisabled(provider: String) {}
-                }
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                1
             )
-        }
-    }
-
-    @SuppressLint("UseCompatLoadingForDrawables")
-    private fun centerOnCurrentLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let { location ->
-                val currentGeoPoint = GeoPoint(location.latitude, location.longitude)
-                mapView.controller.animateTo(currentGeoPoint)
-            } ?: Log.e("MapActivity", "Nie można pobrać ostatniej znanej lokalizacji.")
-        } else {
-            Log.e("MapActivity", "Brak uprawnień do lokalizacji.")
-        }
-    }
-
-    @Suppress("DEPRECATION")
-    private fun drawRoute(){
-        polyline?.let { mapView.overlays.remove(it) }
-
-        polyline = Polyline(mapView).apply {
-            setPoints(routePoints)
-            color = resources.getColor(R.color.blue, null)
-            width = 8f
+            return
         }
 
-        mapView.overlays.add(polyline)
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            Looper.getMainLooper()
+        )
     }
 
-    private fun startRun(){
-        isTracking = true
-        routePoints.clear()
-        totalDistance = 0.0
-        startTime = System.currentTimeMillis()
-        elapsedTime = 0
+    private fun stopTracking() {
+        fusedLocationClient.removeLocationUpdates(locationCallback)
+        Log.d("MapActivity", "Dystans: ${totalDistance.roundToInt()} metrów")
     }
 
-    private fun stopRun(){
-        isTracking = false
-        elapsedTime = System.currentTimeMillis() - startTime
-        val averageSpeed = totalDistance / (elapsedTime / 1000.0 / 60.0)
-        Log.d("MapActivity", "Total distance: $totalDistance meters")
-        Log.d("MapActivity", "Elapsed time: $elapsedTime milliseconds")
-        Log.d("MapActivity", "Average speed: $averageSpeed meters per minute")
+    private fun calculateDistance(start: LatLng, end: LatLng): Double {
+        val radius = 6371e3 // Earth radius in meters
+        val lat1 = Math.toRadians(start.latitude)
+        val lat2 = Math.toRadians(end.latitude)
+        val deltaLat = Math.toRadians(end.latitude - start.latitude)
+        val deltaLon = Math.toRadians(end.longitude - start.longitude)
+
+        val a = sin(deltaLat / 2) * sin(deltaLat / 2) +
+                cos(lat1) * cos(lat2) *
+                sin(deltaLon / 2) * sin(deltaLon / 2)
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        return radius * c / 1000.0 // Return distance in kilometers
     }
 }
