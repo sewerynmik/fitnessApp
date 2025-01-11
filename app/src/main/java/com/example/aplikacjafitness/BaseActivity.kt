@@ -62,6 +62,13 @@ open class BaseActivity : AppCompatActivity() {
                     }
                     true
                 }
+                R.id.summary -> {
+                    Log.i("BaseActivity", "Summary item clicked")
+                    if (this !is SummaryActivity) {
+                        startActivity(Intent(this, SummaryActivity::class.java))
+                    }
+                    true
+                }
                 R.id.profile -> {
                     Log.i("BaseActivity", "Profile item clicked")
                     if (this !is Profile) {

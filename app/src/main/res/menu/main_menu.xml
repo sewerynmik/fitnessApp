@@ -12,7 +12,14 @@
     android:title="@string/menuMap"
     android:icon="@drawable/testicon" />
 
+  <item android:id="@+id/summary"
+      android:title="summary"
+      android:icon="@drawable/person" />
+
   <item android:id="@+id/profile"
       android:title="@string/menuProfile"
       android:icon="@drawable/person"/>
+
+
+
 </menu>
