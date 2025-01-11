@@ -10,6 +10,8 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.text.InputType
 import android.text.Spannable
@@ -54,6 +56,7 @@ import com.github.mikephil.charting.listener.OnChartGestureListener
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import java.time.format.DateTimeFormatter
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.coroutines.delay
 
 
 class Progress : BaseActivity(), OnChartValueSelectedListener {
@@ -238,7 +241,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
     private fun showAddProgressPopup() {
         val popupView = layoutInflater.inflate(R.layout.popup_add_progress, null)
-       // val photoStatusTextView: TextView = popupView.findViewById(R.id.photoStatusTextView)
+        val photoStatusTextView: TextView = popupView.findViewById(R.id.photoStatusTextView)
 
         val displayMetrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(displayMetrics)
@@ -270,12 +273,21 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         addPhotoButton.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             startActivityForResult(intent, PICK_IMAGE_REQUEST)
+            Handler(Looper.getMainLooper()).postDelayed({
+                photoStatusTextView.text = "Photo added successfully"
+                photoStatusTextView.visibility = View.VISIBLE
+            }, 1000)
         }
 
         val cameraButton: Button = popupView.findViewById(R.id.cameraButton)
         cameraButton.setOnClickListener {
             val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                photoStatusTextView.text = "Photo added successfully"
+                photoStatusTextView.visibility = View.VISIBLE
+            }, 1000)
         }
 
         cancelButton.setOnClickListener {
@@ -321,9 +333,6 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
             val imageBitmap = data?.extras?.get("data") as Bitmap
             photoFileName = saveImageToInternalStorage(imageBitmap)
         }
-        val photoStatusTextView: TextView = findViewById(R.id.photoStatusTextView)
-        photoStatusTextView.text = "Photo added successfully"
-        photoStatusTextView.visibility = View.VISIBLE
     }
 
     private fun saveImageToInternalStorage(imageUri: Uri?, weightInput: EditText): String? {
