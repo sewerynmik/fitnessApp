@@ -29,7 +29,6 @@ class SummaryActivity : BaseActivity() {
     }
 
     private fun getRoutesFromDatabase(dbHelper: DatabaseHelper, userId: Int): List<Route> {
-        // Przykładowe dane, dostosuj do swojej bazy danych
         val db = dbHelper.readableDatabase
         val cursor = db.rawQuery(
             "SELECT date, distance, time FROM routes WHERE user_id = ? ORDER BY date DESC",
@@ -37,11 +36,23 @@ class SummaryActivity : BaseActivity() {
         )
 
         val routes = mutableListOf<Route>()
+        val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val outputFormat = java.text.SimpleDateFormat("dd.MM.yyyy", java.util.Locale.getDefault())
+
         while (cursor.moveToNext()) {
-            val date = cursor.getString(cursor.getColumnIndexOrThrow("date"))
+            val rawDate = cursor.getString(cursor.getColumnIndexOrThrow("date"))
             val distance = cursor.getFloat(cursor.getColumnIndexOrThrow("distance"))
             val time = cursor.getString(cursor.getColumnIndexOrThrow("time"))
-            routes.add(Route(date, distance, time))
+
+            // Formatowanie daty
+            val formattedDate = try {
+                val parsedDate = inputFormat.parse(rawDate)
+                outputFormat.format(parsedDate ?: rawDate)
+            } catch (e: Exception) {
+                rawDate // Jeśli wystąpi błąd, użyj daty bez formatowania
+            }
+
+            routes.add(Route(formattedDate, distance, time))
         }
         cursor.close()
 

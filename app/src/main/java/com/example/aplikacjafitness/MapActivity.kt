@@ -29,6 +29,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import java.math.BigDecimal
+import java.math.RoundingMode
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -98,6 +100,10 @@ class MapActivity : BaseActivity(), OnMapReadyCallback {
                 startTime = System.currentTimeMillis()
                 (it as Button).text = "Stop"
                 startTracking()
+
+                // Ukryj BottomNavigationView z animacją
+                hideBottomNavigationView()
+
                 infoFrame.visibility = View.VISIBLE
                 resumeButton.visibility = View.INVISIBLE
                 endButton.visibility = View.INVISIBLE
@@ -111,6 +117,9 @@ class MapActivity : BaseActivity(), OnMapReadyCallback {
                 (it as Button).visibility = View.INVISIBLE
                 resumeButton.visibility = View.VISIBLE
                 endButton.visibility = View.VISIBLE
+
+                // Przywróć BottomNavigationView z animacją
+                showBottomNavigationView()
 
                 // Ukrycie pól tekstowych
                 timeTextView.visibility = View.INVISIBLE
@@ -225,8 +234,10 @@ class MapActivity : BaseActivity(), OnMapReadyCallback {
         )
     }
 
+
     private fun stopTracking() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
+
         Log.d("MapActivity", "Dystans: ${totalDistance.roundToInt()} metrów")
     }
 
@@ -246,15 +257,50 @@ class MapActivity : BaseActivity(), OnMapReadyCallback {
     }
 
     private fun showSummary() {
-        val elapsedTime = (endTime - startTime) / 1000.0 // Czas w sekundach
-        val averageSpeed = if (elapsedTime > 0) totalDistance / (elapsedTime / 3600) else 0.0 // km/h
+        val elapsedTime = (endTime - startTime) / 1000.0
+        val averageSpeed = if (elapsedTime > 0) totalDistance / (elapsedTime / 3600) else 0.0
+
+        val userId = Utils.getUserIdFromSharedPreferences(this)
+        val date = java.text.SimpleDateFormat("dd.MM.yyyy", java.util.Locale.getDefault()).format(java.util.Date())
+        val time = formatElapsedTime(elapsedTime.toLong())
+
+        val dbHelper = DatabaseHelper(this)
+        val db = dbHelper.writableDatabase
+
+        val dist = BigDecimal(totalDistance).setScale(2, RoundingMode.HALF_EVEN).toDouble()
+
+        val insertQuery = "INSERT INTO routes (date, distance, time, user_id) VALUES (?, ?, ?, ?)"
+        val statement = db.compileStatement(insertQuery)
+        statement.bindString(1, date)
+        statement.bindDouble(2, dist)
+        statement.bindString(3, time)
+        statement.bindLong(4, userId.toLong())
+        statement.executeInsert()
+
+        db.close()
 
         val intent = Intent(this, SummaryActivity::class.java).apply {
-            putExtra("distance", totalDistance)
+            putExtra("distance", dist)
             putExtra("time", elapsedTime)
             putExtra("averageSpeed", averageSpeed)
         }
         startActivity(intent)
+    }
+
+    private fun hideBottomNavigationView() {
+        val bottomNav = findViewById<BottomNavigationView>(R.id.menuBottom)
+        bottomNav.animate()
+            .translationY(bottomNav.height.toFloat()) // Przesunięcie poza ekran
+            .setDuration(300) // Czas trwania animacji w ms
+            .start()
+    }
+
+    private fun showBottomNavigationView() {
+        val bottomNav = findViewById<BottomNavigationView>(R.id.menuBottom)
+        bottomNav.animate()
+            .translationY(0f) // Powrót na pierwotne miejsce
+            .setDuration(300)
+            .start()
     }
 
 }
