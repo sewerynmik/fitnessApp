@@ -25,6 +25,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.809">
 
+
         <TextView
             android:id="@+id/dateProgress"
             android:layout_width="wrap_content"
@@ -33,6 +34,7 @@
             android:layout_marginTop="5dp"
             android:text="date"
             android:textSize="10sp" />
+
 
         <TextView
             android:id="@+id/weightProg"
@@ -50,6 +52,15 @@
             android:layout_marginTop="75dp"
             android:text="Bmi"
             android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/dateProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="5dp"
+            android:text="date"
+            android:textSize="10sp" />
 
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/lineChartProgress"
@@ -108,10 +119,8 @@
                     android:id="@+id/progressWeight2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center|center_vertical"
-                    android:gravity="center"
-                    android:text="TextViewprogress weight from beginning of working"
-                    android:textSize="14sp" />
+                    android:layout_gravity="center_vertical"
+                    android:text="TextViewprogress weight from beginning of working" />
             </androidx.cardview.widget.CardView>
 
             <androidx.cardview.widget.CardView
@@ -124,8 +133,7 @@
                     android:id="@+id/progressWeight"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center|center_vertical"
-                    android:gravity="center"
+                    android:layout_gravity="center_vertical"
                     android:text="weight progress from last weight" />
             </androidx.cardview.widget.CardView>
 

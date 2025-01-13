@@ -9,7 +9,7 @@
     <androidx.cardview.widget.CardView
         android:id="@+id/ProfileCard"
         android:layout_width="match_parent"
-        android:layout_height="450dp"
+        android:layout_height="550dp"
         android:layout_margin="10dp"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
@@ -31,105 +31,60 @@
             android:foregroundGravity="center"
             android:src="@drawable/logo" />
 
-        <TextView
-            android:id="@+id/emailTag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="-105dp"
-            android:gravity="center"
-            android:text="Email:" />
-
         <EditText
             android:id="@+id/profEmail"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|center_vertical"
-            android:layout_marginTop="-80dp"
+            android:layout_marginTop="-130dp"
             android:editable="false"
             android:ems="10"
             android:gravity="center_horizontal"
             android:hint="No Email Provided"
             android:minHeight="48dp" />
 
-        <TextView
-            android:id="@+id/nameTag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="-50dp"
-            android:gravity="center"
-            android:text="Name:" />
-
         <EditText
             android:id="@+id/profName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|center_vertical"
-            android:layout_marginTop="-25dp"
+            android:layout_marginTop="-65dp"
             android:editable="false"
             android:ems="10"
             android:gravity="center_horizontal"
             android:hint="No Name Provided"
             android:minHeight="48dp" />
 
-        <TextView
-            android:id="@+id/surrTag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="5dp"
-            android:gravity="center"
-            android:text="Surname:" />
-
         <EditText
             android:id="@+id/profSur"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|center_vertical"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="0dp"
             android:editable="false"
             android:ems="10"
             android:gravity="center_horizontal"
             android:hint="No Surname Provided"
             android:minHeight="48dp" />
 
-        <TextView
-            android:id="@+id/heightTag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="60dp"
-            android:gravity="center"
-            android:text="Height:" />
-
         <EditText
             android:id="@+id/profHeight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|center_vertical"
-            android:layout_marginTop="85dp"
+            android:layout_marginTop="130dp"
             android:editable="false"
             android:ems="10"
             android:gravity="center_horizontal"
             android:hint="No Height Provided"
             android:minHeight="48dp" />
 
-        <TextView
-            android:id="@+id/stepsTag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="115dp"
-            android:gravity="center"
-            android:text="Steps Daily:" />
-
         <EditText
             android:id="@+id/profStepGoal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|center_vertical"
-            android:layout_marginTop="140dp"
+            android:layout_marginTop="195dp"
             android:editable="false"
             android:ems="10"
             android:gravity="center_horizontal"

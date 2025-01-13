@@ -1,9 +1,7 @@
 package com.example.aplikacjafitness
 
-import android.content.Context
 import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -12,10 +10,6 @@ import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import android.widget.Button
-import android.widget.ImageView
-import androidx.compose.material3.AlertDialog
-import androidx.compose.ui.semantics.dismiss
-import androidx.compose.ui.semantics.text
 import pl.droidsonroids.gif.GifImageView
 import androidx.appcompat.app.AlertDialog
 import pl.droidsonroids.gif.GifDrawable
