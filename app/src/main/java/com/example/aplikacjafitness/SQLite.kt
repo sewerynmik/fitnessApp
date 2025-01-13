@@ -16,7 +16,7 @@ import kotlin.text.toFloat
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val DATABASE_NAME = "FitnessApp.db"
-        private const val DATABASE_VERSION = 8 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
+        private const val DATABASE_VERSION = 10 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
     }
 
     private val context: Context = context
@@ -51,6 +51,16 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 "\tCONSTRAINT \"weight_users\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\")\n" +
                 ");")
 
+        db.execSQL("CREATE TABLE \"routes\" (\n" +
+                "\t\"id\"\tINTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+                "\t\"date\"\tTEXT,\n" +
+                "\t\"distance\"\tREAL,\n" +
+                "\t\"time\"\tTEXT,\n" +
+                "\t\"user_id\"\tINTEGER,\n" +
+                "\tCONSTRAINT \"fk_routes_user\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\")\n" +
+                ")")
+
+
         db.execSQL("INSERT INTO users (email, name, surname, born_date, weight, height, daily_steps_target, password) VALUES ('email@mail.com', 'John', 'Doe', '1990-01-01', 70.5, 180.0, 8000, 'pass')")
         db.execSQL("INSERT INTO users (email, name, surname, born_date, weight, height, daily_steps_target, password) VALUES ('email2@mail.com', 'John2', 'Doe2', '1990-01-01', 70.5, 180.0, 8000, 'pass')")
 
@@ -64,6 +74,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (88.5, '22-11-2024', 1)")
         db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (85, '20-11-2024', 1)")
         db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (72, '15-11-2024', 1)")
+
+        db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('23.11.2024', 5.3, '00:45:00', 1)")
+        db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('22.11.2024', 3.2, '00:30:00', 1)")
+        db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('21.11.2024', 4.8, '00:40:00', 2)")
+
     }
 
 
@@ -71,9 +86,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         if (oldVersion < newVersion) {
             db.execSQL("DROP TABLE IF EXISTS users")
             db.execSQL("DROP TABLE IF EXISTS daily_steps")
+            db.execSQL("DROP TABLE IF EXISTS weight_progress")
+            db.execSQL("DROP TABLE IF EXISTS routes")
             onCreate(db)
         }
     }
+
 
     fun insertStepCount(db: SQLiteDatabase, date: String, steps: Int) {
         val values = ContentValues().apply {
