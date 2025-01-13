@@ -16,7 +16,7 @@ import kotlin.text.toFloat
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val DATABASE_NAME = "FitnessApp.db"
-        private const val DATABASE_VERSION = 8 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
+        private const val DATABASE_VERSION = 10 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
     }
 
     private val context: Context = context
