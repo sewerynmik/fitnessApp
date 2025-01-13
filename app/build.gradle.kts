@@ -1,7 +1,7 @@
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
 }
 
 android {
@@ -39,6 +39,7 @@ android {
     }
     buildFeatures {
         compose = true
+        viewBinding = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -50,19 +51,22 @@ android {
     }
 }
 
-
 dependencies {
-    implementation("androidx.glance:glance-appwidget:1.0.0-alpha05")
+
     implementation(libs.androidx.core.ktx)
+
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.material)
+    implementation(libs.play.services.maps)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.play.services.location)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -70,18 +74,19 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("com.google.accompanist:accompanist-permissions:0.31.2-alpha")
-    implementation("androidx.compose.ui:ui-text:1.5.4")
-    implementation("androidx.cardview:cardview:1.0.0")
-    implementation("com.google.android.material:material:1.9.0")
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.accompanist.permissions)
+    implementation(libs.androidx.ui.text)
+    implementation(libs.androidx.cardview)
+    implementation(libs.material)
     //noinspection GradleDynamicVersion
     implementation("pl.droidsonroids.gif:android-gif-drawable:1.2.+")
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
-    implementation("de.hdodenhof:circleimageview:3.1.0")
-    implementation(libs.glance.appwidget)
-
+    implementation(libs.mpandroidchart)
+    implementation(libs.circleimageview)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.osmdroid.android)
+    implementation("com.google.android.gms:play-services-maps:18.1.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1'")
 
 }
