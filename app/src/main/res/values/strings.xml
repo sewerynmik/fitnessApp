@@ -3,7 +3,7 @@
     <string name="menuMain">Main</string>
     <string name="menuWorkout">Workout</string>
     <string name="menuMap">Map</string>
-    <string name="menuProfile">profile</string>
+    <string name="menuProfile">Profile</string>
     <string name="start">Start</string>
     <string name="title_activity_maps">MapsActivity</string>
 </resources>

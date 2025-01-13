@@ -60,7 +60,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 "\tCONSTRAINT \"fk_routes_user\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\")\n" +
                 ")")
 
-
         db.execSQL("INSERT INTO users (email, name, surname, born_date, weight, height, daily_steps_target, password) VALUES ('email@mail.com', 'John', 'Doe', '1990-01-01', 70.5, 180.0, 8000, 'pass')")
         db.execSQL("INSERT INTO users (email, name, surname, born_date, weight, height, daily_steps_target, password) VALUES ('email2@mail.com', 'John2', 'Doe2', '1990-01-01', 70.5, 180.0, 8000, 'pass')")
 
@@ -78,7 +77,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('23.11.2024', 5.3, '00:45:00', 1)")
         db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('22.11.2024', 3.2, '00:30:00', 1)")
         db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('21.11.2024', 4.8, '00:40:00', 2)")
-
     }
 
 
@@ -91,7 +89,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             onCreate(db)
         }
     }
-
 
     fun insertStepCount(db: SQLiteDatabase, date: String, steps: Int) {
         val values = ContentValues().apply {
@@ -259,5 +256,91 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     data class WeightProgressData(val weight: Float, val picName: String?)
 
-// Add other database operations here (e.g., update, delete, query)
+    fun getUserData(userId: Int): UserData {
+        val db = this.readableDatabase
+        val cursor = db.query(
+            "users",
+            arrayOf("height", "weight"),
+            "id = ?",
+            arrayOf(userId.toString()),
+            null,
+            null,
+            null
+        )
+
+        var height = 0f
+        var weight = 0f
+
+        if (cursor != null && cursor.moveToFirst()) {
+            height = cursor.getFloat(cursor.getColumnIndexOrThrow("height"))
+            weight = cursor.getFloat(cursor.getColumnIndexOrThrow("height"))
+            cursor.close()
+        }
+
+        db.close()
+        return UserData(height, weight)
+    }
+
+    fun getLastRecordedWeightBeforeDate(userId: Int, date: String): Float? {
+        val db = this.readableDatabase
+        val query = """
+        SELECT weight FROM weight_progress
+        WHERE user_id = ? AND date < ?
+        ORDER BY date DESC
+        LIMIT 1
+    """
+        val cursor = db.rawQuery(query, arrayOf(userId.toString(), date))
+        return if (cursor.moveToFirst()) {
+            cursor.getFloat(cursor.getColumnIndexOrThrow("weight"))
+        } else {
+            null
+        }.also { cursor.close() }
+    }
+
+    fun getLastWeightEntry(userId: Int): WeightAllData? {
+        val db = this.readableDatabase
+        val query = """
+        SELECT weight, date FROM weight_progress
+        WHERE user_id = ?
+        ORDER BY date DESC
+        LIMIT 1
+    """
+        val cursor = db.rawQuery(query, arrayOf(userId.toString()))
+        val lastEntry = if (cursor.moveToFirst()) {
+            val weight = cursor.getFloat(cursor.getColumnIndexOrThrow("weight"))
+            val date = cursor.getString(cursor.getColumnIndexOrThrow("date"))
+            WeightAllData(weight, date)
+        } else {
+            null
+        }
+        cursor.close()
+        return lastEntry
+    }
+
+    data class WeightAllData(val weight: Float, val date: String)
+
+    fun getImageForDate(userId: Int, date: String): String? {
+        val db = this.readableDatabase
+        val query = "SELECT pic_name FROM weight_progress WHERE user_id = ? AND date = ?"
+        val cursor = db.rawQuery(query, arrayOf(userId.toString(), date))
+
+        return if (cursor.moveToFirst()) {
+            cursor.getString(cursor.getColumnIndexOrThrow("pic_name"))
+        } else {
+            null
+        }.also {
+            cursor.close()
+        }
+    }
+
 }
+
+data class UserData(val height: Float, val weight: Float)
+
+
+
+
+
+
+// Add other database operations here (e.g., update, delete, query)
+//sql

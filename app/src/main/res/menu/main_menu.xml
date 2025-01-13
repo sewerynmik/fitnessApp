@@ -13,7 +13,7 @@
     android:icon="@drawable/testicon" />
 
   <item android:id="@+id/summary"
-      android:title="summary"
+      android:title="History"
       android:icon="@drawable/person" />
 
   <item android:id="@+id/profile"

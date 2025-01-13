@@ -42,14 +42,14 @@ class Login : BaseActivity() {
         db = dbHelper.writableDatabase
 
         val isDatabaseConnected = dbHelper.isDatabaseConnected()
-        val connectionInfo = if (isDatabaseConnected) "Database connected" else "Database connection failed"
-        Toast.makeText(this, connectionInfo, Toast.LENGTH_SHORT).show()
-        val userEmail = dbHelper.getUserEmailById(1)
-        if (userEmail != null) {
-            Toast.makeText(this, "User email: $userEmail", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this, "User with id = 1 not found", Toast.LENGTH_SHORT).show()
-        }
+//        val connectionInfo = if (isDatabaseConnected) "Database connected" else "Database connection failed"
+//        Toast.makeText(this, connectionInfo, Toast.LENGTH_SHORT).show()
+//        val userEmail = dbHelper.getUserEmailById(1)
+//        if (userEmail != null) {
+//            Toast.makeText(this, "User email: $userEmail", Toast.LENGTH_SHORT).show()
+//        } else {
+//            Toast.makeText(this, "User with id = 1 not found", Toast.LENGTH_SHORT).show()
+//        }
 
         loginButton.setOnClickListener {
             val email = findViewById<EditText>(R.id.loginMail).text.toString()
