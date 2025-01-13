@@ -50,13 +50,13 @@ open class BaseActivity : AppCompatActivity() {
                     }
                     true
                 }
-//                R.id.workout -> {
-//                    Log.i("BaseActivity", "Workout item clicked")
-//                    if (this !is Progress) {
-//                        startActivity(Intent(this, Progress::class.java))
-//                    }
-//                    true
-//                }
+                R.id.workout -> {
+                    Log.i("BaseActivity", "Workout item clicked")
+                    if (this !is Progress) {
+                        startActivity(Intent(this, Progress::class.java))
+                    }
+                    true
+                }
 
                 R.id.map -> {
                     Log.i("BaseActivity", "Map item clicked")
