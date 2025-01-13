@@ -88,8 +88,6 @@ class MapActivity : BaseActivity(), OnMapReadyCallback {
         val infoFrame = findViewById<FrameLayout>(R.id.info)
         val timeTextView = findViewById<TextView>(R.id.timeTextView)
         val distanceTextView = findViewById<TextView>(R.id.distanceTextView)
-        val resumeButton = findViewById<Button>(R.id.resumeRun)
-        val endButton = findViewById<Button>(R.id.endRun)
 
 
         findViewById<Button>(R.id.startRun).setOnClickListener {
@@ -101,60 +99,23 @@ class MapActivity : BaseActivity(), OnMapReadyCallback {
                 (it as Button).text = "Stop"
                 startTracking()
 
-                // Ukryj BottomNavigationView z animacją
                 hideBottomNavigationView()
 
                 infoFrame.visibility = View.VISIBLE
-                resumeButton.visibility = View.INVISIBLE
-                endButton.visibility = View.INVISIBLE
-
-                // Pokazanie pól tekstowych
                 timeTextView.visibility = View.VISIBLE
                 distanceTextView.visibility = View.VISIBLE
                 updateInfo(timeTextView, distanceTextView)
             } else {
                 endTime = System.currentTimeMillis()
-                (it as Button).visibility = View.INVISIBLE
-                resumeButton.visibility = View.VISIBLE
-                endButton.visibility = View.VISIBLE
+                (it as Button).text = "Start"
+                stopTracking()
 
-                // Przywróć BottomNavigationView z animacją
                 showBottomNavigationView()
 
-                // Ukrycie pól tekstowych
+                infoFrame.visibility = View.INVISIBLE
                 timeTextView.visibility = View.INVISIBLE
                 distanceTextView.visibility = View.INVISIBLE
-                stopTracking()
             }
-        }
-
-        resumeButton.setOnClickListener {
-            tracking = true
-            startTime = System.currentTimeMillis() - (endTime - startTime) // Kontynuacja czasu
-            startTracking()
-
-            // Zarządzanie widocznością
-            findViewById<Button>(R.id.startRun).visibility = View.VISIBLE
-            findViewById<Button>(R.id.startRun).text = "Stop"
-            resumeButton.visibility = View.INVISIBLE
-            endButton.visibility = View.INVISIBLE
-
-            // Ukrycie pól tekstowych
-            findViewById<TextView>(R.id.timeTextView).visibility = View.VISIBLE
-            findViewById<TextView>(R.id.distanceTextView).visibility = View.VISIBLE
-
-            // Ponowne uruchomienie aktualizacji informacji
-            updateInfo(findViewById(R.id.timeTextView), findViewById(R.id.distanceTextView))
-        }
-
-        endButton.setOnClickListener {
-            tracking = false
-            infoFrame.visibility = View.INVISIBLE
-
-            // Ukrycie pól tekstowych
-            timeTextView.visibility = View.INVISIBLE
-            distanceTextView.visibility = View.INVISIBLE
-            showSummary()
         }
 
 
@@ -227,6 +188,13 @@ class MapActivity : BaseActivity(), OnMapReadyCallback {
             return
         }
 
+
+        // Animacja wysunięcia widoku "info"
+        findViewById<FrameLayout>(R.id.info).animate()
+            .translationY(250f) // Przesunięcie w górę o 200dp
+            .setDuration(300)
+            .start()
+
         fusedLocationClient.requestLocationUpdates(
             locationRequest,
             locationCallback,
@@ -234,11 +202,58 @@ class MapActivity : BaseActivity(), OnMapReadyCallback {
         )
     }
 
-
     private fun stopTracking() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
 
-        Log.d("MapActivity", "Dystans: ${totalDistance.roundToInt()} metrów")
+        // Animacja ukrycia widoku "info"
+        findViewById<FrameLayout>(R.id.info).animate()
+            .translationY(0f) // Powrót do pierwotnej pozycji
+            .setDuration(300)
+            .start()
+
+        // Wyświetlenie podsumowania w Popup
+        showSummaryPopup()
+    }
+
+    private fun showSummaryPopup() {
+        val elapsedTime = (endTime - startTime) / 1000.0
+        val averageSpeed = if (elapsedTime > 0) totalDistance / (elapsedTime / 3600) else 0.0
+
+        val formattedTime = formatElapsedTime(elapsedTime.toLong())
+        val formattedDistance = BigDecimal(totalDistance).setScale(2, RoundingMode.HALF_EVEN).toDouble()
+        val formattedSpeed = "%.2f".format(averageSpeed)
+
+        // Zapis danych do bazy
+        val userId = Utils.getUserIdFromSharedPreferences(this)
+        val date = java.text.SimpleDateFormat("dd.MM.yyyy", java.util.Locale.getDefault()).format(java.util.Date())
+
+        val dbHelper = DatabaseHelper(this)
+        val db = dbHelper.writableDatabase
+
+        val insertQuery = "INSERT INTO routes (date, distance, time, user_id) VALUES (?, ?, ?, ?)"
+        val statement = db.compileStatement(insertQuery)
+        statement.bindString(1, date)
+        statement.bindDouble(2, formattedDistance)
+        statement.bindString(3, formattedTime)
+        statement.bindLong(4, userId.toLong())
+        statement.executeInsert()
+
+        db.close()
+
+        // Wyświetlenie popupu
+        val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(this)
+        dialogBuilder.setTitle("Podsumowanie biegu")
+        dialogBuilder.setMessage(
+            """
+        Czas trwania: $formattedTime
+        Dystans: ${"%.2f".format(formattedDistance)} km
+        Średnia prędkość: $formattedSpeed km/h
+        """.trimIndent()
+        )
+        dialogBuilder.setPositiveButton("OK") { dialog, _ ->
+            dialog.dismiss()
+        }
+        dialogBuilder.create().show()
     }
 
     private fun calculateDistance(start: LatLng, end: LatLng): Double {
@@ -256,36 +271,36 @@ class MapActivity : BaseActivity(), OnMapReadyCallback {
         return radius * c / 1000.0 // Return distance in kilometers
     }
 
-    private fun showSummary() {
-        val elapsedTime = (endTime - startTime) / 1000.0
-        val averageSpeed = if (elapsedTime > 0) totalDistance / (elapsedTime / 3600) else 0.0
-
-        val userId = Utils.getUserIdFromSharedPreferences(this)
-        val date = java.text.SimpleDateFormat("dd.MM.yyyy", java.util.Locale.getDefault()).format(java.util.Date())
-        val time = formatElapsedTime(elapsedTime.toLong())
-
-        val dbHelper = DatabaseHelper(this)
-        val db = dbHelper.writableDatabase
-
-        val dist = BigDecimal(totalDistance).setScale(2, RoundingMode.HALF_EVEN).toDouble()
-
-        val insertQuery = "INSERT INTO routes (date, distance, time, user_id) VALUES (?, ?, ?, ?)"
-        val statement = db.compileStatement(insertQuery)
-        statement.bindString(1, date)
-        statement.bindDouble(2, dist)
-        statement.bindString(3, time)
-        statement.bindLong(4, userId.toLong())
-        statement.executeInsert()
-
-        db.close()
-
-        val intent = Intent(this, SummaryActivity::class.java).apply {
-            putExtra("distance", dist)
-            putExtra("time", elapsedTime)
-            putExtra("averageSpeed", averageSpeed)
-        }
-        startActivity(intent)
-    }
+//    private fun showSummary() {
+//        val elapsedTime = (endTime - startTime) / 1000.0
+//        val averageSpeed = if (elapsedTime > 0) totalDistance / (elapsedTime / 3600) else 0.0
+//
+//        val userId = Utils.getUserIdFromSharedPreferences(this)
+//        val date = java.text.SimpleDateFormat("dd.MM.yyyy", java.util.Locale.getDefault()).format(java.util.Date())
+//        val time = formatElapsedTime(elapsedTime.toLong())
+//
+//        val dbHelper = DatabaseHelper(this)
+//        val db = dbHelper.writableDatabase
+//
+//        val dist = BigDecimal(totalDistance).setScale(2, RoundingMode.HALF_EVEN).toDouble()
+//
+//        val insertQuery = "INSERT INTO routes (date, distance, time, user_id) VALUES (?, ?, ?, ?)"
+//        val statement = db.compileStatement(insertQuery)
+//        statement.bindString(1, date)
+//        statement.bindDouble(2, dist)
+//        statement.bindString(3, time)
+//        statement.bindLong(4, userId.toLong())
+//        statement.executeInsert()
+//
+//        db.close()
+//
+//        val intent = Intent(this, SummaryActivity::class.java).apply {
+//            putExtra("distance", dist)
+//            putExtra("time", elapsedTime)
+//            putExtra("averageSpeed", averageSpeed)
+//        }
+//        startActivity(intent)
+//    }
 
     private fun hideBottomNavigationView() {
         val bottomNav = findViewById<BottomNavigationView>(R.id.menuBottom)
