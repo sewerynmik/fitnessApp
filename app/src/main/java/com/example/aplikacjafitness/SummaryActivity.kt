@@ -13,7 +13,7 @@ class SummaryActivity : BaseActivity() {
         setContentView(R.layout.activity_summary)
 
         val dbHelper = DatabaseHelper(this)
-        val userId = Utils.getUserIdFromSharedPreferences(this) // Zakładamy, że masz funkcję do pobierania ID użytkownika
+        val userId = Utils.getUserIdFromSharedPreferences(this)
         val routes = getRoutesFromDatabase(dbHelper, userId)
 
         val recyclerView: RecyclerView = findViewById(R.id.routesRecyclerView)

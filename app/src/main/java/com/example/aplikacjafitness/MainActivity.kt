@@ -15,6 +15,7 @@ import android.hardware.SensorManager
 import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -184,6 +185,7 @@ class MainActivity : BaseActivity(), SensorEventListener {
             startActivity(intent)
         }
 
+        loadLastRoute()
 
         // bottom nav
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.menuBottom)
@@ -360,6 +362,56 @@ class MainActivity : BaseActivity(), SensorEventListener {
 
             profileBtn.setImageResource(R.drawable.person)
         }
+    }
+
+    private fun loadLastRoute() {
+        val dbHelper = DatabaseHelper(this)
+        val db = dbHelper.readableDatabase
+
+        // Zapytanie o najnowszy bieg
+        val query = "SELECT id, date, distance, time FROM routes ORDER BY id DESC LIMIT 1"
+        val cursor = db.rawQuery(query, null)
+
+        // Odwołania do widoków
+        val distanceTextView: TextView = findViewById(R.id.biegi)
+        val avgSpeedTextView: TextView = findViewById(R.id.biegii)
+        val caloriesTextView: TextView = findViewById(R.id.biiegi)
+        val speedTextView: TextView = findViewById(R.id.biiiegii)
+        val noRunTextView: TextView = findViewById(R.id.yeti)
+
+        if (cursor.moveToFirst()) {
+            // Pobieramy dane z kursora
+            val distance = cursor.getFloat(cursor.getColumnIndexOrThrow("distance"))
+            val time = cursor.getString(cursor.getColumnIndexOrThrow("time"))
+
+            // Wyliczamy dodatkowe dane
+            val caloriesBurned = (distance * 60).toInt()
+            val parts = time.split(":")
+            val seconds = parts[0].toIntOrNull() ?: 0
+            val minutes = parts[1].toIntOrNull() ?: 0
+            val totalSeconds = minutes * 60 + seconds
+            val averageSpeed = (distance / totalSeconds) * 3600
+
+
+            // Formatowanie i ustawianie danych w widokach
+            distanceTextView.text = "Distance: %.2f km".format(distance)
+            avgSpeedTextView.text = "Average speed: %.2f km/h".format(averageSpeed)
+            caloriesTextView.text = "Calories loss: $caloriesBurned kcal"
+            speedTextView.text = "Time: ${time}".format(averageSpeed)
+
+            // Ukrycie komunikatu "No run yet"
+            noRunTextView.visibility = View.GONE
+        } else {
+            // Jeśli brak danych, wyświetlamy komunikat
+            noRunTextView.visibility = View.VISIBLE
+            distanceTextView.text = ""
+            avgSpeedTextView.text = ""
+            caloriesTextView.text = ""
+            speedTextView.text = ""
+        }
+
+        cursor.close()
+        db.close()
     }
 
 }

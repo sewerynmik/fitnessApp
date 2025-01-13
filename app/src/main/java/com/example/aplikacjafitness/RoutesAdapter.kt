@@ -1,3 +1,4 @@
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,8 +33,8 @@ class RoutesAdapter(private val routes: List<Route>) : RecyclerView.Adapter<Rout
         holder.kcalTextView.text = "Calories: ${caloriesBurned} "
 
         val parts = route.time.split(":")
-        val minutes = parts[0].toIntOrNull() ?: 0
-        val seconds = parts[1].toIntOrNull() ?: 0
+        val seconds = parts[0].toIntOrNull() ?: 0
+        val minutes = parts[1].toIntOrNull() ?: 0
         val totalSeconds = minutes * 60 + seconds
         val averageSpeed = (route.distance / totalSeconds) * 3600
 
