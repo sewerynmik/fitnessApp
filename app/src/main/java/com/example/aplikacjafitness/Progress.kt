@@ -31,9 +31,6 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.semantics.text
-import androidx.glance.visibility
 import java.time.LocalDate
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
