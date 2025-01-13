@@ -12,6 +12,7 @@
     <color name="Tlo_karta">#CF30AE</color>
     <color name="blue">#0000FF</color>
     <color name="yellow">#D4E21E</color>
+    <color name="blur_background">#80000000</color>
 
     <color name="bottom_nav_color">#FF6200EE</color>
     <color name="bottom_nav_icon_inactive">#b187f6</color>

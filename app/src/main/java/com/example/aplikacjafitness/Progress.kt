@@ -2,15 +2,19 @@ package com.example.aplikacjafitness
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.MotionEvent
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -19,6 +23,9 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.semantics.text
+import androidx.glance.visibility
+import java.time.LocalDate
 import androidx.compose.ui.tooling.data.position
 import androidx.core.text.color
 import com.github.mikephil.charting.charts.LineChart
@@ -44,6 +51,9 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.ChartTouchListener
 import com.github.mikephil.charting.listener.OnChartGestureListener
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
+import java.time.format.DateTimeFormatter
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.coroutines.delay
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 
@@ -204,6 +214,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
     private fun showAddProgressPopup() {
         val popupView = layoutInflater.inflate(R.layout.popup_add_progress, null)
+        val photoStatusTextView: TextView = popupView.findViewById(R.id.photoStatusTextView)
 
         val displayMetrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(displayMetrics)
@@ -223,6 +234,21 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         addPhotoButton.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             startActivityForResult(intent, PICK_IMAGE_REQUEST)
+            Handler(Looper.getMainLooper()).postDelayed({
+                photoStatusTextView.text = "Photo added successfully"
+                photoStatusTextView.visibility = View.VISIBLE
+            }, 1000)
+        }
+
+        val cameraButton: Button = popupView.findViewById(R.id.cameraButton)
+        cameraButton.setOnClickListener {
+            val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                photoStatusTextView.text = "Photo added successfully"
+                photoStatusTextView.visibility = View.VISIBLE
+            }, 1000)
         }
 
         cancelButton.setOnClickListener {
@@ -235,6 +261,9 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
             val userId = Utils.getUserIdFromSharedPreferences(this)
 
             popupWindow.dismiss()
+            finish()
+            startActivity(intent)
+
         }
 
         popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0)
@@ -247,7 +276,12 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
             val selectedImageUri = data.data
+            photoFileName = saveImageToInternalStorage(selectedImageUri, weightInput).toString()
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
+            val imageBitmap = data?.extras?.get("data") as Bitmap
+            photoFileName = saveImageToInternalStorage(imageBitmap)
             saveImageToInternalStorage(selectedImageUri, weightInput)
+
         }
     }
 
@@ -264,10 +298,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
                 outputStream.close()
                 inputStream?.close()
 
-                val userId = Utils.getUserIdFromSharedPreferences(this)
-                val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
-                val weight = weightInput.text.toString().toFloatOrNull() ?: 0f
-                dbHelper.insertWeightProgress(userId, currentDate, weight, fileName)
+                return fileName
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -275,8 +306,18 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         }
     }
 
+    private fun saveImageToInternalStorage(bitmap: Bitmap): String {
+        val fileName = "progress_photo_${System.currentTimeMillis()}.jpg"
+        val file = File(filesDir, fileName)
+        FileOutputStream(file).use { outputStream ->
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+            outputStream.flush()
+        }
+        return fileName
+    }
     companion object {
         private const val PICK_IMAGE_REQUEST = 1
+        private const val REQUEST_IMAGE_CAPTURE = 2
     }
 
     private fun loadProfilePictureForButton() {

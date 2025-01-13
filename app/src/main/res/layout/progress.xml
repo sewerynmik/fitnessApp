@@ -25,6 +25,17 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.809">
 
+
+        <TextView
+            android:id="@+id/dateProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="5dp"
+            android:text="date"
+            android:textSize="10sp" />
+
+
         <TextView
             android:id="@+id/weightProg"
             android:layout_width="wrap_content"
