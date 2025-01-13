@@ -2,9 +2,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.compose.ui.semantics.text
 import androidx.recyclerview.widget.RecyclerView
 import com.example.aplikacjafitness.R
 import com.example.aplikacjafitness.Route
+import kotlin.text.toDoubleOrNull
 
 class RoutesAdapter(private val routes: List<Route>) : RecyclerView.Adapter<RoutesAdapter.RouteViewHolder>() {
 
@@ -12,6 +14,8 @@ class RoutesAdapter(private val routes: List<Route>) : RecyclerView.Adapter<Rout
         val dateTextView: TextView = itemView.findViewById(R.id.routeDate)
         val distanceTextView: TextView = itemView.findViewById(R.id.routeDistance)
         val timeTextView: TextView = itemView.findViewById(R.id.routeTime)
+        val kcalTextView: TextView = itemView.findViewById(R.id.routeKcal)
+        val avgSpeedTextView: TextView = itemView.findViewById(R.id.routeAvgSpeed)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RouteViewHolder {
@@ -22,8 +26,19 @@ class RoutesAdapter(private val routes: List<Route>) : RecyclerView.Adapter<Rout
     override fun onBindViewHolder(holder: RouteViewHolder, position: Int) {
         val route = routes[position]
         holder.dateTextView.text = route.date
-        holder.distanceTextView.text = "Dystans: ${route.distance} km"
-        holder.timeTextView.text = "Czas: ${route.time}"
+        holder.distanceTextView.text = "Distance: ${route.distance} km"
+        holder.timeTextView.text = "Time: ${route.time}"
+        val caloriesBurned = (route.distance * 60).toInt()
+        holder.kcalTextView.text = "Calories: ${caloriesBurned} "
+
+        val parts = route.time.split(":")
+        val minutes = parts[0].toIntOrNull() ?: 0
+        val seconds = parts[1].toIntOrNull() ?: 0
+        val totalSeconds = minutes * 60 + seconds
+        val averageSpeed = (route.distance / totalSeconds) * 3600
+
+        holder.avgSpeedTextView.text = "Speed: ${String.format("%.2f", averageSpeed)} km/h"
+
     }
 
     override fun getItemCount(): Int {
