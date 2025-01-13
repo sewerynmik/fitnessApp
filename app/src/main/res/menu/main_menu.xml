@@ -14,7 +14,7 @@
 
   <item android:id="@+id/summary"
       android:title="History"
-      android:icon="@drawable/workout" />
+      android:icon="@drawable/routes" />
 
   <item android:id="@+id/profile"
       android:title="@string/menuProfile"
