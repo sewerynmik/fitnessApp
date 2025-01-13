@@ -9,8 +9,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
-import java.io.Console
-
 open class BaseActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,7 +55,6 @@ open class BaseActivity : AppCompatActivity() {
                     }
                     true
                 }
-
                 R.id.map -> {
                     Log.i("BaseActivity", "Map item clicked")
                     if (this !is MapActivity) {
@@ -72,7 +69,6 @@ open class BaseActivity : AppCompatActivity() {
                     }
                     true
                 }
-
                 R.id.profile -> {
                     Log.i("BaseActivity", "Profile item clicked")
                     if (this !is Profile) {
