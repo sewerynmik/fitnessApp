@@ -6,15 +6,15 @@
 
   <item android:id="@+id/workout"
       android:title="@string/menuWorkout"
-      android:icon="@drawable/workout"/>
+      android:icon="@drawable/weight"/>
 
   <item android:id="@+id/map"
     android:title="@string/menuMap"
-    android:icon="@drawable/testicon" />
+    android:icon="@drawable/map" />
 
   <item android:id="@+id/summary"
       android:title="History"
-      android:icon="@drawable/person" />
+      android:icon="@drawable/workout" />
 
   <item android:id="@+id/profile"
       android:title="@string/menuProfile"
