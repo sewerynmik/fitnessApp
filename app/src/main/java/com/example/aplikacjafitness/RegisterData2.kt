@@ -44,9 +44,11 @@ class RegisterData2 : BaseActivity() {
 
                 val userId = dbHelper.addUserData(email, name, surname, bornDateValue, weightValue, heightValue,8000,  password)
 
+                val hour = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+
                 if (userId != -1L) {
                     val today = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
-                    dbHelper.addWeightProg(weightValue.toFloat(), today, userId.toInt())
+                    dbHelper.addWeightProg(weightValue.toFloat(), today, userId.toInt(),hour)
 
                     editor.remove("EMAILreg")
                     editor.remove("EMAILreg")

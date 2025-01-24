@@ -16,7 +16,7 @@ import kotlin.text.toFloat
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val DATABASE_NAME = "FitnessApp.db"
-        private const val DATABASE_VERSION = 11 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
+        private const val DATABASE_VERSION = 12 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
     }
     @Volatile
     private var INSTANCE: DatabaseHelper? = null
@@ -56,6 +56,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 "\t\"date\"\tTEXT,\n" +
                 "\t\"user_id\"\tINTEGER,\n" +
                 "\t\"pic_name\"\tTEXT,\n" +
+                "\t\"hour\"\tTEXT,\n" +
                 "\tCONSTRAINT \"weight_users\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\")\n" +
                 ");")
 
@@ -149,12 +150,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return newRowId
     }
 
-    fun addWeightProg(weight: Float, date: String, userId: Int) {
+    fun addWeightProg(weight: Float, date: String, userId: Int,hour: String) {
         val db = writableDatabase
         val values = ContentValues().apply {
             put("weight", weight)
             put("date", date)
             put("user_id", userId)
+            put("hour", hour)
         }
         db.insert("weight_progress", null, values)
 
@@ -240,13 +242,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return weights to dates
     }
 
-    fun insertWeightProgress(userId: Int, date: String, weight: Float, picName: String? = null) {
+    fun insertWeightProgress(userId: Int, date: String, weight: Float, picName: String? = null, hour : String) {
         val db = writableDatabase
         val values = ContentValues().apply {
             put("user_id", userId)
             put("date", date)
             put("weight", weight)
             put("pic_name", picName)
+            put("hour", hour)
         }
         db.insert("weight_progress", null, values)
     }
@@ -303,20 +306,19 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return UserData(height, weight)
     }
 
-    fun getLastRecordedWeightBeforeDate(userId: Int, date: String): Float? {
+    fun getLastRecordedWeightBeforeDate(userId: Int, date: String): Float {
         val db = this.readableDatabase
-        val query = """
-        SELECT weight FROM weight_progress
-        WHERE user_id = ? AND date < ?
-        ORDER BY date DESC
-        LIMIT 1
-    """
-        val cursor = db.rawQuery(query, arrayOf(userId.toString(), date))
-        return if (cursor.moveToFirst()) {
-            cursor.getFloat(cursor.getColumnIndexOrThrow("weight"))
-        } else {
-            null
-        }.also { cursor.close() }
+        val cursor = db.rawQuery(
+            "SELECT weight FROM weight_progress WHERE user_id = ? AND date < ? ORDER BY date DESC, hour DESC LIMIT 1",
+            arrayOf(userId.toString(), date)
+        )
+        var lastWeight = 0f
+        if (cursor.moveToFirst()) {
+            lastWeight = cursor.getFloat(cursor.getColumnIndexOrThrow("weight"))
+        }
+        cursor.close()
+        db.close()
+        return lastWeight
     }
 
     fun getLastWeightEntry(userId: Int): WeightAllData? {
