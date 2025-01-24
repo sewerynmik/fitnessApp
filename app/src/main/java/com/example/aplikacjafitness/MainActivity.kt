@@ -19,9 +19,11 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.ui.tooling.data.position
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import androidx.core.text.color
 import androidx.lifecycle.lifecycleScope
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
@@ -292,16 +294,25 @@ class MainActivity : BaseActivity(), SensorEventListener {
         val userId = getUserIdFromSharedPreferences()
         val last7DaysSteps = dbHelper.getLast7DaysSteps(userId)
         val xAxisLabels = ArrayList<String>()
-        val averageSteps = last7DaysSteps.average().toFloat()
+
+        // Ensure we have 7 days of data, filling with 0 if missing
+        val stepsData = if (last7DaysSteps.size < 7) {
+            val missingDays = 7 - last7DaysSteps.size
+            List(missingDays) { 0 } + last7DaysSteps
+        } else {
+            last7DaysSteps.takeLast(7) // Take only last 7 days if more than 7
+        }
+
+        val averageSteps = stepsData.average().toFloat()
 
         val calendar = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("dd", java.util.Locale.getDefault())
 
         calendar.add(Calendar.DAY_OF_YEAR, -6)
 
-        for (i in 0 until last7DaysSteps.size) {
+        for (i in 0 until 7) { // Always iterate 7 times for 7 days
             xAxisLabels.add(dateFormat.format(calendar.time))
-            entries.add(Entry(i.toFloat(), last7DaysSteps[i].toFloat()))
+            entries.add(Entry(i.toFloat(), stepsData[i].toFloat()))
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
 
@@ -321,7 +332,7 @@ class MainActivity : BaseActivity(), SensorEventListener {
 
         val averageLineDataSet = LineDataSet(listOf(
             Entry(0f, averageSteps),
-            Entry(last7DaysSteps.size.toFloat() - 1, averageSteps)
+            Entry(6f, averageSteps) // Use 6f instead of last7DaysSteps.size.toFloat() - 1
         ), "Average")
 
         averageLineDataSet.color = Color.RED
