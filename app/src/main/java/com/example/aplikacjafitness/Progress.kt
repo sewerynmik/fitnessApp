@@ -55,6 +55,7 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import java.time.format.DateTimeFormatter
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.delay
+import kotlin.math.absoluteValue
 
 
 class Progress : BaseActivity(), OnChartValueSelectedListener {
@@ -192,27 +193,25 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         val userId = Utils.getUserIdFromSharedPreferences(this)
         val (weights, initialDates, hours) = dbHelper.getWeightProgress(userId)
 
-        // Sparuj daty z godzinami dla unikalności
-        val dateTimePairs = initialDates.zip(hours)
+        // Sparuj daty z godzinami
+        val dateTimePairs = initialDates.zip(hours).mapIndexed { index, pair ->
+            Triple(pair.first, pair.second, weights[index]) // Data, godzina, waga
+        }
+
+        // Sortowanie po dacie i godzinie
         val dateFormat = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault())
+        val sortedData = dateTimePairs.sortedWith(compareBy { dateFormat.parse("${it.first} ${it.second}") })
 
-        val parsedData = dateTimePairs.mapIndexedNotNull { index, pair ->
-            try {
-                dateFormat.parse("${pair.first} ${pair.second}")?.let { it to weights[index] }
-            } catch (e: Exception) {
-                Log.e("Progress2", "Failed to parse date/time: ${pair.first} ${pair.second}", e)
-                null
-            }
-        }.sortedBy { it.first }
-
-        val sortedDates = parsedData.map { dateFormat.format(it.first) }
-        val sortedWeights = parsedData.map { it.second }
+        // Aktualizacja sortedDates i weightsList
+        val sortedDates = sortedData.map { "${it.first} ${it.second}" }
+        val sortedWeights = sortedData.map { it.third }
 
         val valueToDateMap = mutableMapOf<Float, String>()
         for (i in sortedWeights.indices) {
             entries.add(Entry(i.toFloat(), sortedWeights[i]))
             valueToDateMap[i.toFloat()] = sortedDates[i]
         }
+        Log.d("DEBUG", "ValueToDateMap: $valueToDateMap")
 
         weightsList = sortedWeights
         val dataSet = LineDataSet(entries, "Weight")
@@ -241,6 +240,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
             lineChart.moveViewToX(0f)
         }
     }
+
 
     private fun showAddProgressPopup() {
         val popupView = layoutInflater.inflate(R.layout.popup_add_progress, null)
@@ -509,52 +509,31 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
         progressWeight2.text = run {
             val dateIndex = sortedDates.indexOf(date)
-            Log.d("DEBUG", "Date: $date, dateIndex: $dateIndex, sortedDates: $sortedDates")
+            Log.d("DEBUG", "Date: $date, dateIndex: $dateIndex, SortedDates: $sortedDates")
 
             if (dateIndex in weightsList.indices && dateIndex > 0) {
                 val firstWeight = weightsList[0]
-                val daysAgo = calculateDaysAgo(sortedDates[0], date)
+                val daysAgo = calculateDaysAgo(sortedDates[0].substringBefore(" "), date)
                 var progressCompared = weightsList[dateIndex] - firstWeight
-                var index2 = false
-                if (progressCompared < 0) {
-                    index2 = true
-                    progressCompared *= -1
-                }
+                val isWeightLoss = progressCompared < 0
+                progressCompared = progressCompared.absoluteValue
 
                 Log.d("DEBUG", "FirstWeight: $firstWeight, ProgressCompared: $progressCompared, DaysAgo: $daysAgo")
 
                 val progressText = "${String.format("%.1f", progressCompared)} kg\nCompared with $daysAgo days ago\n (${sortedDates[0]})"
-                val spannableString = SpannableString(progressText)
-
-                val numberEndIndex = progressText.indexOf(" kg")
-                spannableString.setSpan(
-                    ForegroundColorSpan(if (index2) Color.GREEN else Color.RED),
-                    0,
-                    numberEndIndex,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-
-                spannableString.setSpan(
-                    RelativeSizeSpan(2f),
-                    0,
-                    numberEndIndex,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-
-                val comparedStartIndex = progressText.indexOf("Compared")
-                spannableString.setSpan(
-                    RelativeSizeSpan(0.7f),
-                    comparedStartIndex,
-                    progressText.length,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-
-                spannableString
+                SpannableString(progressText).apply {
+                    val numberEndIndex = progressText.indexOf(" kg")
+                    setSpan(ForegroundColorSpan(if (isWeightLoss) Color.GREEN else Color.RED), 0, numberEndIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(RelativeSizeSpan(2f), 0, numberEndIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(RelativeSizeSpan(0.7f), progressText.indexOf("Compared"), progressText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
             } else {
-                Log.e("DEBUG", "No valid data for progress calculation.")
+                Log.e("DEBUG", "Invalid data for progress calculation.")
                 SpannableString("No progress data available")
             }
         }
+
+
 
     }
 
@@ -637,25 +616,25 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         val closestEntry = lineChart.data.getDataSetByIndex(0)
             ?.getEntryForXValue(centerX, Float.NaN, DataSet.Rounding.CLOSEST)
 
-        closestEntry?.let { entry ->
-            val index = entry.x.toInt()
+        if (closestEntry != null) {
+            val index = closestEntry.x.toInt()
 
             if (index in weightsList.indices) {
-                val userId = Utils.getUserIdFromSharedPreferences(this)
-                val (weights, dates, hours) = dbHelper.getWeightProgress(userId)
+                val selectedDate = sortedDates[index]
+                val selectedWeight = weightsList[index]
 
-                val selectedDate = dates[index]
-                val selectedHour = hours[index]
+                Log.d("DEBUG", "updateDataOnScroll: Index=$index, Date=$selectedDate, Weight=$selectedWeight")
 
-                Log.d("DEBUG", "updateDataOnScroll: Date=$selectedDate, Hour=$selectedHour, Weight=${weights[index]}")
-
-                // Aktualizuj dane w interfejsie użytkownika
-                updateChartDataWithHour(selectedDate, selectedHour, weights[index])
+                // Aktualizuj dane w interfejsie
+                updateChartData(selectedDate, weightsList)
             } else {
-                Log.e("DEBUG", "updateDataOnScroll: Index $index is out of bounds!")
+                Log.e("DEBUG", "updateDataOnScroll: Index $index out of bounds for sortedDates size=${sortedDates.size}")
             }
-        } ?: Log.e("DEBUG", "updateDataOnScroll: closestEntry is null")
+        } else {
+            Log.e("DEBUG", "updateDataOnScroll: closestEntry is null")
+        }
     }
+
 
     private fun snapToNearestDot() {
         val centerX = (lineChart.lowestVisibleX + lineChart.highestVisibleX) / 2f
@@ -665,24 +644,25 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         closestEntry?.let { entry ->
             val index = entry.x.toInt()
 
-            // Pobranie pełnej informacji (data + godzina) dla punktu
             if (index in weightsList.indices) {
                 val userId = Utils.getUserIdFromSharedPreferences(this)
                 val (weights, dates, hours) = dbHelper.getWeightProgress(userId)
 
                 val selectedDate = dates[index]
                 val selectedHour = hours[index]
+                val selectedWeight = weights[index]
 
-                Log.d("DEBUG", "Snap to: Date=$selectedDate, Hour=$selectedHour, Weight=${weights[index]}")
+                Log.d("DEBUG", "snapToNearestDot: Index=$index, Date=$selectedDate, Hour=$selectedHour, Weight=$selectedWeight")
 
-                // Aktualizacja postępu dla daty i godziny
-                updateChartDataWithHour(selectedDate, selectedHour, weights[index])
-
-                // Ustaw widok na wybrany punkt
                 lineChart.centerViewToAnimated(entry.x, entry.y, YAxis.AxisDependency.LEFT, 300)
+                // Aktualizacja danych w interfejsie
+                updateChartDataWithHour(selectedDate, selectedHour, selectedWeight)
+            } else {
+                Log.e("DEBUG", "snapToNearestDot: Index $index out of bounds for weightsList size=${weightsList.size}")
             }
         }
     }
+
 
     private fun calculateDailyProgress(dates: List<String>, weights: List<Float>): List<Float> {
         val dailyProgress = mutableListOf<Float>()
