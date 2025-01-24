@@ -1,6 +1,7 @@
 package com.example.aplikacjafitness
 
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -34,6 +35,8 @@ import androidx.activity.result.launch
 import java.io.File
 import kotlin.io.path.exists
 import android.provider.MediaStore
+import android.util.Log
+import com.android.identity.util.UUID
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.io.FileOutputStream
 
@@ -236,14 +239,35 @@ class Profile : BaseActivity() {
     }
 
     private fun loadProfilePicture() {
-        val file = File(filesDir, "profile_picture.jpg")
-        if (file.exists()) {
-            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-            profileImageView.setImageBitmap(bitmap)
+        val userId = getUserIdFromSharedPreferences(this)
+        val dbHelper = DatabaseHelper(this)
+        val db = dbHelper.readableDatabase
+        val cursor = db.rawQuery("SELECT prof_pic FROM users WHERE id = ?", arrayOf(userId.toString()))
+
+        if (cursor.moveToFirst()) {
+            val picName = cursor.getString(cursor.getColumnIndexOrThrow("prof_pic")) // Get the column by name
+            if (!picName.isNullOrEmpty()) {
+                val file = File(filesDir, picName)
+                if (file.exists()) {
+                    val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                    profileImageView.setImageBitmap(bitmap)
+                } else {
+                    // File not found, log an error and load the default image
+                    Log.e("loadProfilePicture", "Profile picture file not found: $picName")
+                    profileImageView.setImageResource(R.drawable.logo)
+                }
+            } else {
+                // picName is null or empty, load the default image
+                profileImageView.setImageResource(R.drawable.logo)
+            }
         } else {
+            // No user found, load the default image
             profileImageView.setImageResource(R.drawable.logo)
         }
-}
+
+        cursor.close()
+
+    }
 
 class HeightInputFilter : InputFilter {
     override fun filter(source: CharSequence, start: Int, end: Int, dest: Spanned, dstart: Int, dend: Int): CharSequence? {
@@ -294,33 +318,64 @@ fun getUserIdFromSharedPreferences(context: Context): Int {
 }
 
 
-    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val data: Intent? = result.data
-            val imageUri: Uri? = data?.data
-            if (imageUri != null) {
-                try {
-                    val inputStream = contentResolver.openInputStream(imageUri)
-                    val bitmap = BitmapFactory.decodeStream(inputStream)
-                    inputStream?.close()
+    private val pickImageLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+                val imageUri: Uri? = data?.data
+                if (imageUri != null) {
+                    try {
+                        val inputStream = contentResolver.openInputStream(imageUri)
+                        val bitmap = BitmapFactory.decodeStream(inputStream)
+                        inputStream?.close()
 
-                    val file = File(filesDir, "profile_picture.jpg")
-                    val outputStream = FileOutputStream(file)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-                    outputStream.flush()
-                    outputStream.close()
+                        // Generate a unique filename
+                        val filename = "profile_${UUID.randomUUID()}.jpg"
 
-                    profileImageView.setImageBitmap(bitmap)
+                        // Save the image to internal storage with the unique filename
+                        val file = File(filesDir, filename)
+                        val outputStream = FileOutputStream(file)
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                        outputStream.flush()
+                        outputStream.close()
 
-                    Toast.makeText(this, "Profile picture saved", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    Toast.makeText(this, "Error saving profile picture", Toast.LENGTH_SHORT).show()
+                        // Update the database with the filename
+                        val userId = getUserIdFromSharedPreferences(this)
+                        val dbHelper = DatabaseHelper(this)
+                        val db = dbHelper.writableDatabase
+
+                        val values = ContentValues().apply {
+                            put("prof_pic", filename)
+                        }
+
+                        val rowsAffected = db.update(
+                            "users",
+                            values,
+                            "id = ?",
+                            arrayOf(userId.toString())
+                        )
+
+
+
+                        if (rowsAffected > 0) {
+                            Toast.makeText(this, "Profile picture saved", Toast.LENGTH_SHORT).show()
+                            loadProfilePicture() // Refresh the displayed picture
+                        } else {
+                            // If the database update failed, delete the saved file
+                            file.delete()
+                            Toast.makeText(
+                                this,
+                                "Error updating database",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Toast.makeText(this, "Error saving profile picture", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
-    }
-
 
 
 

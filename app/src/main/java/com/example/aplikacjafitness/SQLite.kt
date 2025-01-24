@@ -16,8 +16,15 @@ import kotlin.text.toFloat
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val DATABASE_NAME = "FitnessApp.db"
-        private const val DATABASE_VERSION = 10 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
+        private const val DATABASE_VERSION = 11 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
     }
+    @Volatile
+    private var INSTANCE: DatabaseHelper? = null
+
+    fun RegisterData2(context: Context): DatabaseHelper =
+        INSTANCE ?: synchronized(this) {
+            INSTANCE ?: DatabaseHelper(context.applicationContext).also { INSTANCE = it }
+        }
 
     private val context: Context = context
 
@@ -31,7 +38,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 "\t\"weight\"\tREAL,\n" +
                 "\t\"height\"\tREAL,\n" +
                 "\t\"daily_steps_target\"\tINTEGER,\n" +
-                "\t\"password\"\tTEXT NOT NULL\n" +
+                "\t\"password\"\tTEXT NOT NULL,\n" +
+                "\t\"prof_pic\"\tTEXT \n" +
                 ")")
 
         db.execSQL("CREATE TABLE \"daily_steps\" (\n" +
@@ -90,6 +98,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }
     }
 
+
+
     fun insertStepCount(db: SQLiteDatabase, date: String, steps: Int) {
         val values = ContentValues().apply {
             put("date", date)
@@ -122,8 +132,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return userEmail
     }
 
-    fun addUserData(email: String, name: String, surname: String, bornDate: String, weight: Double, height: Double, dailyStepsTarget: Int, password: String) {
-        val db = writableDatabase
+    fun addUserData(email: String, name: String, surname: String, bornDate: String, weight: Double, height: Double,daily_steps_target: Int, password: String): Long {
+        val db = this.writableDatabase
         val values = ContentValues().apply {
             put("email", email)
             put("name", name)
@@ -131,10 +141,22 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             put("born_date", bornDate)
             put("weight", weight)
             put("height", height)
-            put("daily_steps_target", 6000)
+            put("daily_steps_target",daily_steps_target)
             put("password", password)
         }
-        db.insert("users", null, values)
+        val newRowId = db.insert("users", null, values)
+
+        return newRowId
+    }
+
+    fun addWeightProg(weight: Float, date: String, userId: Int) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("weight", weight)
+            put("date", date)
+            put("user_id", userId)
+        }
+        db.insert("weight_progress", null, values)
 
     }
 
@@ -277,7 +299,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             cursor.close()
         }
 
-        db.close()
+
         return UserData(height, weight)
     }
 

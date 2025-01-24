@@ -365,14 +365,32 @@ class MainActivity : BaseActivity(), SensorEventListener {
     }
 
     private fun loadProfilePictureForButton() {
-        val file = File(filesDir, "profile_picture.jpg")
-        if (file.exists()) {
-            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-            profileBtn.setImageBitmap(bitmap)
-        } else {
+       // val file = File(filesDir, "profile_picture.jpg")
+        val userId = getUserIdFromSharedPreferences()
+        val dbHelper = DatabaseHelper(this)
+        val db = dbHelper.readableDatabase
+        val email = sharedPreferences.getString("EMAIL", "")
 
+        val cursor = db.rawQuery("SELECT prof_pic FROM users WHERE email = ?", arrayOf(email))
+        if (cursor.moveToFirst()) {
+            val picName = cursor.getString(0)
+            if (picName != null) {
+                val file = File(filesDir, picName)
+                if (file.exists()) {
+                    val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                    profileBtn.setImageBitmap(bitmap)
+                }
+            }
+            else{
+                profileBtn.setImageResource(R.drawable.person)
+            }
+            cursor.close()
+        }
+        else{
             profileBtn.setImageResource(R.drawable.person)
         }
+
+
     }
 
     private fun loadLastRoute() {
@@ -422,7 +440,7 @@ class MainActivity : BaseActivity(), SensorEventListener {
         }
 
         cursor.close()
-        db.close()
+
     }
 
 }

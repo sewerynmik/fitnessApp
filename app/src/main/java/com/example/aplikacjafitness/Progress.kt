@@ -31,6 +31,7 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
+import com.example.aplikacjafitness.Utils.getUserIdFromSharedPreferences
 import java.time.LocalDate
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
@@ -377,14 +378,34 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
     }
 
     private fun loadProfilePictureForButton() {
-        val file = File(filesDir, "profile_picture.jpg")
-        if (file.exists()) {
-            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-            profilePic.setImageBitmap(bitmap)
-        } else {
+        val userId = getUserIdFromSharedPreferences(this)
+        val dbHelper = DatabaseHelper(this)
+        val db = dbHelper.readableDatabase
+        val cursor = db.rawQuery("SELECT prof_pic FROM users WHERE id = ?", arrayOf(userId.toString()))
 
+        if (cursor.moveToFirst()) {
+            val picName = cursor.getString(cursor.getColumnIndexOrThrow("prof_pic"))
+            if (!picName.isNullOrEmpty()) {
+                val file = File(filesDir, picName)
+                if (file.exists()) {
+                    val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                    profilePic.setImageBitmap(bitmap)
+                } else {
+                    // File not found, log an error and load the default image
+                    Log.e("loadProfilePicture", "Profile picture file not found: $picName")
+                    profilePic.setImageResource(R.drawable.person)
+                }
+            } else {
+                // picName is null or empty, load the default image
+                profilePic.setImageResource(R.drawable.person)
+            }
+        } else {
+            // No user found, load the default image
             profilePic.setImageResource(R.drawable.person)
         }
+
+        cursor.close()
+
     }
 
     private fun updateChartData(date: String,weights: List<Float>) {

@@ -8,6 +8,9 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.semantics.text
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class RegisterData2 : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,32 +33,39 @@ class RegisterData2 : BaseActivity() {
                 editor.putString("BORNDATEreg", bornDate.text.toString())
                 editor.apply()
 
-                val dbHelper = DatabaseHelper(this)
+                val dbHelper = DatabaseHelper(this) // Create a new instance here
                 val email = sharedPreferences.getString("EMAILreg", "") ?: ""
                 val password = sharedPreferences.getString("PASSWORDreg", "") ?: ""
                 val name = sharedPreferences.getString("NAMEreg", "") ?: ""
                 val surname = sharedPreferences.getString("SURNAMEreg", "") ?: ""
-                val weight = sharedPreferences.getString("WEIGHTreg", "")?.toDoubleOrNull() ?: 0.0
-                val height = sharedPreferences.getString("HEIGHTreg", "")?.toDoubleOrNull() ?: 0.0
-                val bornDate = sharedPreferences.getString("BORNDATEreg", "") ?: ""
+                val weightValue = sharedPreferences.getString("WEIGHTreg", "")?.toDoubleOrNull() ?: 0.0
+                val heightValue = sharedPreferences.getString("HEIGHTreg", "")?.toDoubleOrNull() ?: 0.0
+                val bornDateValue = sharedPreferences.getString("BORNDATEreg", "") ?: ""
 
-                dbHelper.addUserData(email, name, surname, bornDate, weight, height, 0, password)
+                val userId = dbHelper.addUserData(email, name, surname, bornDateValue, weightValue, heightValue,8000,  password)
 
-                editor.remove("EMAILreg")
-                editor.remove("PASSWORDreg")
-                editor.remove("NAMEreg")
-                editor.remove("SURNAMEreg")
-                editor.remove("WEIGHTreg")
-                editor.remove("HEIGHTreg")
-                editor.remove("BORNDATEreg")
-                editor.apply()
+                if (userId != -1L) {
+                    val today = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
+                    dbHelper.addWeightProg(weightValue.toFloat(), today, userId.toInt())
 
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
-            else {
-                val intent = Intent(this, MainActivity::class.java)
+                    editor.remove("EMAILreg")
+                    editor.remove("EMAILreg")
+                    editor.remove("PASSWORDreg")
+                    editor.remove("NAMEreg")
+                    editor.remove("SURNAMEreg")
+                    editor.remove("WEIGHTreg")
+                    editor.remove("HEIGHTreg")
+                    editor.remove("BORNDATEreg")
+                    editor.apply()
+
+                    val intent = Intent(this, Login::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    Toast.makeText(this, "Error adding user data", Toast.LENGTH_SHORT).show()
+                }
+            }            else {
+                val intent = Intent(this, Login::class.java)
                 startActivity(intent)
 
                 val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
