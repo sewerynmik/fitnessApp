@@ -301,8 +301,9 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
             val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
             val userId = Utils.getUserIdFromSharedPreferences(this)
+            val hour = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
 
-            dbHelper.insertWeightProgress(userId, currentDate, weight, photoFileName)
+            dbHelper.insertWeightProgress(userId, currentDate, weight, photoFileName,hour)
 
             loadLineChartData(sortedDates)
             initChart(weightsList, sortedDates)
