@@ -180,35 +180,41 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
             override fun onChartScale(me: MotionEvent?, scaleX: Float, scaleY: Float) {}
             override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
+                Log.d("DEBUG", "onChartTranslate: Chart is being translated, dX=$dX, dY=$dY")
                 updateDataOnScroll(sortedDates)
             }
+
         })
     }
 
     private fun loadLineChartData(dates: List<String>) {
         val entries = ArrayList<Entry>()
         val userId = Utils.getUserIdFromSharedPreferences(this)
-        val (weights, initialDates) = dbHelper.getWeightProgress(userId)
+        val (weights, initialDates, hours) = dbHelper.getWeightProgress(userId)
 
-        val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+        // Sparuj daty z godzinami dla unikalności
+        val dateTimePairs = initialDates.zip(hours)
+        val dateFormat = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault())
 
-        val parsedData = initialDates.mapIndexedNotNull { index, date ->
+        val parsedData = dateTimePairs.mapIndexedNotNull { index, pair ->
             try {
-                dateFormat.parse(date)?.let { it to weights[index] }
+                dateFormat.parse("${pair.first} ${pair.second}")?.let { it to weights[index] }
             } catch (e: Exception) {
-                Log.e("Progress2", "Failed to parse date: $date", e)
+                Log.e("Progress2", "Failed to parse date/time: ${pair.first} ${pair.second}", e)
                 null
             }
         }.sortedBy { it.first }
 
         val sortedDates = parsedData.map { dateFormat.format(it.first) }
         val sortedWeights = parsedData.map { it.second }
+
         val valueToDateMap = mutableMapOf<Float, String>()
-        for (i in weights.indices) {
-            entries.add(Entry(i.toFloat(), weights[i]))
+        for (i in sortedWeights.indices) {
+            entries.add(Entry(i.toFloat(), sortedWeights[i]))
             valueToDateMap[i.toFloat()] = sortedDates[i]
         }
-        weightsList = weights
+
+        weightsList = sortedWeights
         val dataSet = LineDataSet(entries, "Weight")
 
         val lineData = LineData(dataSet)
@@ -230,12 +236,12 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         if (targetIndex in 0 until entries.size) {
             lineChart.setVisibleXRangeMaximum(7f)
             lineChart.moveViewToX(targetIndex.toFloat())
-            updateChartData(sortedDates[targetIndex],weights)
+            updateChartData(sortedDates[targetIndex], sortedWeights)
         } else {
             lineChart.moveViewToX(0f)
         }
-
     }
+
 
     private fun showAddProgressPopup() {
         val popupView = layoutInflater.inflate(R.layout.popup_add_progress, null)
@@ -505,6 +511,8 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
         progressWeight2.text = run {
             val dateIndex = sortedDates.indexOf(date)
+            Log.d("DEBUG", "Date: $date, dateIndex: $dateIndex, sortedDates: $sortedDates")
+
             if (dateIndex in weightsList.indices && dateIndex > 0) {
                 val firstWeight = weightsList[0]
                 val daysAgo = calculateDaysAgo(sortedDates[0], date)
@@ -515,12 +523,14 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
                     progressCompared *= -1
                 }
 
+                Log.d("DEBUG", "FirstWeight: $firstWeight, ProgressCompared: $progressCompared, DaysAgo: $daysAgo")
+
                 val progressText = "${String.format("%.1f", progressCompared)} kg\nCompared with $daysAgo days ago\n (${sortedDates[0]})"
                 val spannableString = SpannableString(progressText)
 
                 val numberEndIndex = progressText.indexOf(" kg")
                 spannableString.setSpan(
-                    ForegroundColorSpan(if (index2 == true) Color.GREEN else Color.RED),
+                    ForegroundColorSpan(if (index2) Color.GREEN else Color.RED),
                     0,
                     numberEndIndex,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -543,19 +553,28 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
                 spannableString
             } else {
+                Log.e("DEBUG", "No valid data for progress calculation.")
                 SpannableString("No progress data available")
             }
         }
+
     }
 
     override fun onValueSelected(e: Entry, h: Highlight) {
-        val x = e.x.toInt()
-        if (x in sortedDates.indices) {
-            val selectedDate = sortedDates[x]
-            updateChartData(selectedDate, weightsList)
-
+        val index = e.x.toInt()
+        if (index in weightsList.indices) {
             val userId = Utils.getUserIdFromSharedPreferences(this)
-            val imageFilePath = dbHelper.getImageForDate(userId, selectedDate)
+            val (weights, dates, hours) = dbHelper.getWeightProgress(userId)
+
+            // Pobierz datę i godzinę dla wybranego punktu
+            val selectedDate = dates[index]
+            val selectedHour = hours[index]
+
+            // Aktualizuj dane w interfejsie na podstawie wybranej godziny
+            updateChartDataWithHour(selectedDate, selectedHour, weights[index])
+
+            // Pobierz zdjęcie związane z wybraną datą i godziną
+            val imageFilePath = dbHelper.getImageForDate(userId, selectedDate, selectedHour)
             if (!imageFilePath.isNullOrEmpty()) {
                 showImageDialog(imageFilePath)
             } else {
@@ -588,6 +607,34 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
     }
 
+    private fun updateChartDataWithHour(date: String, hour: String, weight: Float) {
+        Log.d("DEBUG", "updateChartDataWithHour: Updating with Date=$date, Hour=$hour, Weight=$weight")
+
+        val userId = Utils.getUserIdFromSharedPreferences(this)
+        val userData = dbHelper.getUserData(userId)
+
+        val height = userData.height
+        val bmi = if (height > 0) {
+            weight / ((height / 100.0) * (height / 100.0)).toFloat()
+        } else {
+            0f
+        }
+
+        // Aktualizuj pola w interfejsie
+        weightProg.text = "$weight kg"
+        dateProgress.text = "$date $hour"
+
+        bmiProgress.text = when {
+            bmi >= 30 -> "BMI: %.1f (Obese)".format(bmi)
+            bmi >= 25 -> "BMI: %.1f (Overweight)".format(bmi)
+            bmi >= 18.5 -> "BMI: %.1f (Normal)".format(bmi)
+            else -> "BMI: %.1f (Underweight)".format(bmi)
+        }
+
+        Log.d("DEBUG", "updateChartDataWithHour: BMI updated to $bmi")
+    }
+
+
     private fun updateDataOnScroll(sortedDates: List<String>) {
         val centerX = (lineChart.lowestVisibleX + lineChart.highestVisibleX) / 2f
         val closestEntry = lineChart.data.getDataSetByIndex(0)
@@ -595,26 +642,54 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
         closestEntry?.let { entry ->
             val index = entry.x.toInt()
-            if (index in sortedDates.indices) {
-                val date = sortedDates[index]
-                updateChartData(date,weightsList)
+
+            if (index in weightsList.indices) {
+                val userId = Utils.getUserIdFromSharedPreferences(this)
+                val (weights, dates, hours) = dbHelper.getWeightProgress(userId)
+
+                val selectedDate = dates[index]
+                val selectedHour = hours[index]
+
+                Log.d("DEBUG", "updateDataOnScroll: Date=$selectedDate, Hour=$selectedHour, Weight=${weights[index]}")
+
+                // Aktualizuj dane w interfejsie użytkownika
+                updateChartDataWithHour(selectedDate, selectedHour, weights[index])
+            } else {
+                Log.e("DEBUG", "updateDataOnScroll: Index $index is out of bounds!")
             }
-        }
+        } ?: Log.e("DEBUG", "updateDataOnScroll: closestEntry is null")
     }
+
+
+
 
     private fun snapToNearestDot() {
         val centerX = (lineChart.lowestVisibleX + lineChart.highestVisibleX) / 2f
         val closestEntry = lineChart.data.getDataSetByIndex(0)
             ?.getEntryForXValue(centerX, Float.NaN, DataSet.Rounding.CLOSEST)
-        if (closestEntry != null) {
-            val dateIndex = closestEntry.x.toInt()
-            if (dateIndex in sortedDates.indices) {
-                val date = sortedDates[dateIndex]
-                updateChartData(date,weightsList)
-                lineChart.centerViewToAnimated(dateIndex.toFloat(), 0f, YAxis.AxisDependency.LEFT, 300)
+
+        closestEntry?.let { entry ->
+            val index = entry.x.toInt()
+
+            // Pobranie pełnej informacji (data + godzina) dla punktu
+            if (index in weightsList.indices) {
+                val userId = Utils.getUserIdFromSharedPreferences(this)
+                val (weights, dates, hours) = dbHelper.getWeightProgress(userId)
+
+                val selectedDate = dates[index]
+                val selectedHour = hours[index]
+
+                Log.d("DEBUG", "Snap to: Date=$selectedDate, Hour=$selectedHour, Weight=${weights[index]}")
+
+                // Aktualizacja postępu dla daty i godziny
+                updateChartDataWithHour(selectedDate, selectedHour, weights[index])
+
+                // Ustaw widok na wybrany punkt
+                lineChart.centerViewToAnimated(entry.x, entry.y, YAxis.AxisDependency.LEFT, 300)
             }
         }
     }
+
 
     private fun calculateDailyProgress(dates: List<String>, weights: List<Float>): List<Float> {
         val dailyProgress = mutableListOf<Float>()
@@ -634,18 +709,22 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         return try {
             val start = dateFormat.parse("$startDate UTC")
             val end = dateFormat.parse("$endDate UTC")
+            Log.d("DEBUG", "StartDate: $startDate, EndDate: $endDate, ParsedStart: $start, ParsedEnd: $end")
 
             if (start != null && end != null) {
                 val differenceInMillis = end.time - start.time
                 (differenceInMillis / (1000 * 60 * 60 * 24)).toInt()
             } else {
+                Log.e("DEBUG", "Error parsing dates in calculateDaysAgo.")
                 0
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            Log.e("DEBUG", "Exception in calculateDaysAgo: ${e.message}")
             0
         }
     }
+
 
     private fun initChart(weights: List<Float>, dates: List<String>) {
         val entries = weights.mapIndexed { index, weight ->

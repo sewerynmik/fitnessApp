@@ -226,21 +226,24 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return stepsList.reversed()
     }
 
-    fun getWeightProgress(userId: Int): Pair<List<Float>, List<String>> {
+    fun getWeightProgress(userId: Int): Triple<List<Float>, List<String>, List<String>> {
         val db = readableDatabase
         val cursor = db.rawQuery(
-            "SELECT weight, date FROM weight_progress WHERE user_id = ? ORDER BY date ASC",
+            "SELECT weight, date, hour FROM weight_progress WHERE user_id = ? ORDER BY date ASC, hour ASC",
             arrayOf(userId.toString())
         )
         val weights = mutableListOf<Float>()
         val dates = mutableListOf<String>()
+        val hours = mutableListOf<String>()
         while (cursor.moveToNext()) {
             weights.add(cursor.getFloat(cursor.getColumnIndexOrThrow("weight")))
             dates.add(cursor.getString(cursor.getColumnIndexOrThrow("date")))
+            hours.add(cursor.getString(cursor.getColumnIndexOrThrow("hour")))
         }
         cursor.close()
-        return weights to dates
+        return Triple(weights, dates, hours)
     }
+
 
     fun insertWeightProgress(userId: Int, date: String, weight: Float, picName: String? = null, hour : String) {
         val db = writableDatabase
@@ -317,7 +320,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             lastWeight = cursor.getFloat(cursor.getColumnIndexOrThrow("weight"))
         }
         cursor.close()
-        db.close()
         return lastWeight
     }
 
@@ -343,10 +345,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     data class WeightAllData(val weight: Float, val date: String)
 
-    fun getImageForDate(userId: Int, date: String): String? {
+    fun getImageForDate(userId: Int, date: String, hour: String): String? {
         val db = this.readableDatabase
-        val query = "SELECT pic_name FROM weight_progress WHERE user_id = ? AND date = ?"
-        val cursor = db.rawQuery(query, arrayOf(userId.toString(), date))
+        val query = "SELECT pic_name FROM weight_progress WHERE user_id = ? AND date = ? AND hour = ?"
+        val cursor = db.rawQuery(query, arrayOf(userId.toString(), date, hour))
 
         return if (cursor.moveToFirst()) {
             cursor.getString(cursor.getColumnIndexOrThrow("pic_name"))
@@ -356,6 +358,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             cursor.close()
         }
     }
+
 
 }
 
