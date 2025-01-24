@@ -242,7 +242,6 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         }
     }
 
-
     private fun showAddProgressPopup() {
         val popupView = layoutInflater.inflate(R.layout.popup_add_progress, null)
         val photoStatusTextView: TextView = popupView.findViewById(R.id.photoStatusTextView)
@@ -327,7 +326,6 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
         popupWindow.showAtLocation(findViewById(android.R.id.content), Gravity.CENTER, 0, 0)
     }
-
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -634,7 +632,6 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         Log.d("DEBUG", "updateChartDataWithHour: BMI updated to $bmi")
     }
 
-
     private fun updateDataOnScroll(sortedDates: List<String>) {
         val centerX = (lineChart.lowestVisibleX + lineChart.highestVisibleX) / 2f
         val closestEntry = lineChart.data.getDataSetByIndex(0)
@@ -659,9 +656,6 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
             }
         } ?: Log.e("DEBUG", "updateDataOnScroll: closestEntry is null")
     }
-
-
-
 
     private fun snapToNearestDot() {
         val centerX = (lineChart.lowestVisibleX + lineChart.highestVisibleX) / 2f
@@ -689,7 +683,6 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
             }
         }
     }
-
 
     private fun calculateDailyProgress(dates: List<String>, weights: List<Float>): List<Float> {
         val dailyProgress = mutableListOf<Float>()
