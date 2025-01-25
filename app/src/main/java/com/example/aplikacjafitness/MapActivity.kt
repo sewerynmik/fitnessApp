@@ -230,12 +230,15 @@ class MapActivity : BaseActivity(), OnMapReadyCallback {
         val dbHelper = DatabaseHelper(this)
         val db = dbHelper.writableDatabase
 
-        val insertQuery = "INSERT INTO routes (date, distance, time, user_id) VALUES (?, ?, ?, ?)"
+        val currHour = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
+
+        val insertQuery = "INSERT INTO routes (date, distance, time, user_id, hour) VALUES (?, ?, ?, ?, ?)"
         val statement = db.compileStatement(insertQuery)
         statement.bindString(1, date)
         statement.bindDouble(2, formattedDistance)
         statement.bindString(3, formattedTime)
         statement.bindLong(4, userId.toLong())
+        statement.bindString(5, currHour)
         statement.executeInsert()
 
         db.close()

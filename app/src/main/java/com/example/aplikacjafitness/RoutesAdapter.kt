@@ -26,11 +26,13 @@ class RoutesAdapter(private val routes: List<Route>) : RecyclerView.Adapter<Rout
 
     override fun onBindViewHolder(holder: RouteViewHolder, position: Int) {
         val route = routes[position]
+        Log.d("RoutesAdapter", "Route: $route")
+
         holder.dateTextView.text = route.date
         holder.distanceTextView.text = "Distance: ${route.distance} km"
         holder.timeTextView.text = "Time: ${route.time}"
         val caloriesBurned = (route.distance * 60).toInt()
-        holder.kcalTextView.text = "Calories: ${caloriesBurned} "
+        holder.kcalTextView.text = "Calories: $caloriesBurned"
 
         val parts = route.time.split(":")
         val seconds = parts[0].toIntOrNull() ?: 0
@@ -39,8 +41,8 @@ class RoutesAdapter(private val routes: List<Route>) : RecyclerView.Adapter<Rout
         val averageSpeed = (route.distance / totalSeconds) * 3600
 
         holder.avgSpeedTextView.text = "Speed: ${String.format("%.2f", averageSpeed)} km/h"
-
     }
+
 
     override fun getItemCount(): Int {
         return routes.size

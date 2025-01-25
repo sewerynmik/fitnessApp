@@ -18,13 +18,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         private const val DATABASE_NAME = "FitnessApp.db"
         private const val DATABASE_VERSION = 13 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
     }
-    @Volatile
-    private var INSTANCE: DatabaseHelper? = null
-
-    fun RegisterData2(context: Context): DatabaseHelper =
-        INSTANCE ?: synchronized(this) {
-            INSTANCE ?: DatabaseHelper(context.applicationContext).also { INSTANCE = it }
-        }
 
     private val context: Context = context
 
@@ -80,15 +73,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('18-01-2025', 1927, 1)")
         db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('17-01-2025', 2534, 1)")
 
-        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (88.5, '22-11-2024', 1,'10:00')")
-        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (85, '20-11-2024', 1,'12:00')")
-        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (72, '15-11-2024', 1,'14:00')")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id, hour) VALUES (88.5, '22-11-2024', 1,'10:00')")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id, hour) VALUES (85, '20-11-2024', 1,'12:00')")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id, hour) VALUES (72, '15-11-2024', 1,'14:00')")
 
-        db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('23.01.2025', 5.3, '00:45:00', 1,'10:00')")
-        db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('22.01.2025', 3.2, '00:30:00', 1,'12:00')")
-        db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('21.01.2025', 4.8, '00:40:00', 2,'13:00')")
+        db.execSQL("INSERT INTO routes (date, distance, time, user_id, hour) VALUES ('23.01.2025', 5.3, '00:45:00', 1,'10:00')")
+        db.execSQL("INSERT INTO routes (date, distance, time, user_id, hour) VALUES ('22.01.2025', 3.2, '00:30:00', 1,'12:00')")
+        db.execSQL("INSERT INTO routes (date, distance, time, user_id, hour) VALUES ('21.01.2025', 4.8, '00:40:00', 2,'13:00')")
     }
-
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < newVersion) {
@@ -99,8 +91,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             onCreate(db)
         }
     }
-
-
 
     fun insertStepCount(db: SQLiteDatabase, date: String, steps: Int) {
         val values = ContentValues().apply {
@@ -244,7 +234,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         cursor.close()
         return Triple(weights, dates, hours)
     }
-
 
     fun insertWeightProgress(userId: Int, date: String, weight: Float, picName: String? = null, hour : String) {
         val db = writableDatabase
