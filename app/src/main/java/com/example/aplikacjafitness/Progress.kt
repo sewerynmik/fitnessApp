@@ -195,25 +195,23 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
         // Sparuj daty z godzinami
         val dateTimePairs = initialDates.zip(hours).mapIndexed { index, pair ->
-            Triple(pair.first, pair.second, weights[index]) // Data, godzina, waga
+            Triple(pair.first, pair.second, weights[index])
         }
 
-        // Sortowanie po dacie i godzinie
         val dateFormat = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault())
         val sortedData = dateTimePairs.sortedWith(compareBy { dateFormat.parse("${it.first} ${it.second}") })
 
-        // Aktualizacja sortedDates i weightsList
-        val sortedDates = sortedData.map { "${it.first} ${it.second}" }
-        val sortedWeights = sortedData.map { it.third }
+        sortedDates = sortedData.map { "${it.first} ${it.second}" }
+        weightsList = sortedData.map { it.third }
 
         val valueToDateMap = mutableMapOf<Float, String>()
-        for (i in sortedWeights.indices) {
-            entries.add(Entry(i.toFloat(), sortedWeights[i]))
+        for (i in weightsList.indices) {
+            entries.add(Entry(i.toFloat(), weightsList[i]))
             valueToDateMap[i.toFloat()] = sortedDates[i]
         }
         Log.d("DEBUG", "ValueToDateMap: $valueToDateMap")
 
-        weightsList = sortedWeights
+        weightsList = weightsList
         val dataSet = LineDataSet(entries, "Weight")
 
         val lineData = LineData(dataSet)
@@ -235,7 +233,7 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         if (targetIndex in 0 until entries.size) {
             lineChart.setVisibleXRangeMaximum(7f)
             lineChart.moveViewToX(targetIndex.toFloat())
-            updateChartData(sortedDates[targetIndex], sortedWeights)
+            updateChartData(sortedDates[targetIndex], weightsList)
         } else {
             lineChart.moveViewToX(0f)
         }
@@ -413,17 +411,16 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
     }
 
-    private fun updateChartData(date: String,weights: List<Float>) {
+    private fun updateChartData(dateWithTime: String, weights: List<Float>) {
         val userId = Utils.getUserIdFromSharedPreferences(this)
-        val data = dbHelper.getDataForDate(date)
-        val userData = dbHelper.getUserData(userId)
 
-        val dateIndex = sortedDates.indexOf(date)
-        val weight = if (dateIndex in weightsList.indices) {
-            weightsList[dateIndex]
-        } else {
-            if (data.weight > 0) data.weight else userData.weight
-        }
+        // Rozdzielenie daty i godziny
+        val parts = dateWithTime.split(" ")
+        val date = parts[0]
+        val time = parts.getOrNull(1) ?: ""
+
+        val weight = weights.getOrNull(sortedDates.indexOf(dateWithTime)) ?: 0f
+        val userData = dbHelper.getUserData(userId)
         val height = userData.height
 
         val bmi = if (height > 0) {
@@ -432,16 +429,8 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
             0f
         }
 
-        weightProg.text = {
-            val dateIndex = sortedDates.indexOf(date)
-            if (dateIndex in weightsList.indices) {
-                "${weightsList[dateIndex]} kg"
-            } else {
-                dbHelper.getLastRecordedWeightBeforeDate(userId, date).toString()
-            }
-        }().toString()
-
-        dateProgress.text = date
+        weightProg.text = "$weight kg"
+        dateProgress.text = "$date $time"
 
         bmiProgress.text = when {
             bmi >= 30 -> "BMI: %.1f (Obese)".format(bmi)
@@ -450,91 +439,69 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
             else -> "BMI: %.1f (Underweight)".format(bmi)
         }
 
-        val (weights, initialSortedDates) = dbHelper.getWeightProgress(userId)
+        // Obliczanie progresu wagowego
+        progressWeight.text = calculateProgressForDate(dateWithTime, weights)
+        progressWeight2.text = calculateTotalProgress(weights)
+    }
 
-        val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-        val parsedDates = initialSortedDates.mapNotNull {
-            try {
-                dateFormat.parse(it)
-            } catch (e: Exception) {
-                null
+    private fun calculateProgressForDate(dateWithTime: String, weights: List<Float>): SpannableString {
+        val dateIndex = sortedDates.indexOf(dateWithTime)
+        if (dateIndex > 0) {
+            val progress = weights[dateIndex] - weights[dateIndex - 1]
+            val isWeightLoss = progress < 0
+
+            val previousDate = sortedDates[dateIndex - 1]
+
+            val progressText = "${String.format("%.1f", progress.absoluteValue)} kg\n Progress from $previousDate"
+            return SpannableString(progressText).apply {
+                setSpan(
+                    ForegroundColorSpan(if (isWeightLoss) Color.GREEN else Color.RED),
+                    0, progressText.indexOf("kg"),
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                setSpan(
+                    RelativeSizeSpan(2f),
+                    0,
+                    progressText.indexOf("kg"),
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                val progressStartIndex = progressText.indexOf("\n") + 1
+                setSpan(
+                    RelativeSizeSpan(0.7f),
+                    progressStartIndex,
+                    progressText.length,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
             }
         }
-        val sortedParsedDates = parsedDates.sorted()
-        val sortedDates = sortedParsedDates.map { dateFormat.format(it) }
+        return SpannableString("No progress data")
+    }
 
-        val progressFromLastDay = calculateDailyProgress(sortedDates, weights)
+    private fun calculateTotalProgress(weights: List<Float>): SpannableString {
+        if (weights.size > 1) {
+            val progress = weights.last() - weights.first()
+            val isWeightLoss = progress < 0
 
-        var index = sortedDates.indexOf(date)
-        var isWeightLoss = false
+            val selectedWeight = weights.last()
+            val daysAgo = calculateDaysAgo(sortedDates[0].substringBefore(" "), sortedDates.last().substringBefore(" ") )
 
-        if (index > 0) {
-            var dailyProgress = progressFromLastDay[index - 1]
-            if (dailyProgress < 0) {
-                dailyProgress = dailyProgress * -1
-                isWeightLoss = true
-            }
+            val totalProgress = selectedWeight - weightsList.first()
+            val isTotalWeightLoss = totalProgress < 0
+            val progressText = "${String.format("%.1f", progress.absoluteValue)} kg\nCompared with $daysAgo days ago\n (${sortedDates[0]})"
+            return SpannableString(progressText).apply {
+                setSpan(
+                    ForegroundColorSpan(if (isWeightLoss) Color.GREEN else Color.RED),
+                    0, progressText.indexOf("kg"),
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                val numberEndIndex = progressText.indexOf("kg")
+                setSpan(ForegroundColorSpan(if (isTotalWeightLoss) Color.GREEN else Color.RED), 0, numberEndIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(RelativeSizeSpan(2f), 0, numberEndIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(RelativeSizeSpan(0.7f), progressText.indexOf("Compared"), progressText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-            val previousDate = sortedDates[index - 1]
-
-            val progressText = "${String.format("%.1f", dailyProgress)} kg\n Progress ($previousDate)\n "
-            val spannableString = SpannableString(progressText)
-
-            val numberEndIndex = progressText.indexOf(" kg")
-            spannableString.setSpan(
-                ForegroundColorSpan(if (isWeightLoss) Color.GREEN else Color.RED),
-                0,
-                numberEndIndex,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            spannableString.setSpan(
-                RelativeSizeSpan(2f),
-                0,
-                numberEndIndex,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            val progressStartIndex = progressText.indexOf("\n") + 1
-            spannableString.setSpan(
-                RelativeSizeSpan(0.7f),
-                progressStartIndex,
-                progressText.length,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-
-            progressWeight.text = spannableString
-        } else {
-            progressWeight.text = "No progress data"
-            progressWeight.setTextColor(Color.GRAY)
-        }
-
-        progressWeight2.text = run {
-            val dateIndex = sortedDates.indexOf(date)
-            Log.d("DEBUG", "Date: $date, dateIndex: $dateIndex, SortedDates: $sortedDates")
-
-            if (dateIndex in weightsList.indices && dateIndex > 0) {
-                val firstWeight = weightsList[0]
-                val daysAgo = calculateDaysAgo(sortedDates[0].substringBefore(" "), date)
-                var progressCompared = weightsList[dateIndex] - firstWeight
-                val isWeightLoss = progressCompared < 0
-                progressCompared = progressCompared.absoluteValue
-
-                Log.d("DEBUG", "FirstWeight: $firstWeight, ProgressCompared: $progressCompared, DaysAgo: $daysAgo")
-
-                val progressText = "${String.format("%.1f", progressCompared)} kg\nCompared with $daysAgo days ago\n (${sortedDates[0]})"
-                SpannableString(progressText).apply {
-                    val numberEndIndex = progressText.indexOf(" kg")
-                    setSpan(ForegroundColorSpan(if (isWeightLoss) Color.GREEN else Color.RED), 0, numberEndIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    setSpan(RelativeSizeSpan(2f), 0, numberEndIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    setSpan(RelativeSizeSpan(0.7f), progressText.indexOf("Compared"), progressText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            } else {
-                Log.e("DEBUG", "Invalid data for progress calculation.")
-                SpannableString("No progress data available")
             }
         }
-
-
-
+        return SpannableString("No progress data")
     }
 
     override fun onValueSelected(e: Entry, h: Highlight) {
@@ -618,22 +585,84 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
 
         if (closestEntry != null) {
             val index = closestEntry.x.toInt()
+            Log.d("DEBUG", "updateDataOnScroll: Index=$index, sortedDates size=${sortedDates.size}, weightsList size=${weightsList.size}")
 
-            if (index in weightsList.indices) {
-                val selectedDate = sortedDates[index]
+            if (index in sortedDates.indices && index in weightsList.indices) {
+                val selectedDateTime = sortedDates[index]
                 val selectedWeight = weightsList[index]
 
-                Log.d("DEBUG", "updateDataOnScroll: Index=$index, Date=$selectedDate, Weight=$selectedWeight")
+                Log.d("DEBUG", "updateDataOnScroll: DateTime=$selectedDateTime, Weight=$selectedWeight")
 
-                // Aktualizuj dane w interfejsie
-                updateChartData(selectedDate, weightsList)
+                // Aktualizacja wyświetlania bieżącej wagi
+                weightProg.text = "$selectedWeight kg"
+
+                // Aktualizacja progressWeight i progressWeight2
+                updateProgressFields(selectedWeight, index)
             } else {
-                Log.e("DEBUG", "updateDataOnScroll: Index $index out of bounds for sortedDates size=${sortedDates.size}")
+                Log.e("DEBUG", "updateDataOnScroll: Index $index out of bounds!")
             }
         } else {
             Log.e("DEBUG", "updateDataOnScroll: closestEntry is null")
         }
     }
+
+    private fun updateProgressFields(selectedWeight: Float, index: Int) {
+        // Obliczanie progresu dla `progressWeight`
+        if (index > 0) {
+            val previousWeight = weightsList[index - 1]
+            val progress = selectedWeight - previousWeight
+            val isWeightLoss = progress < 0
+            val progressText = "${String.format("%.1f", progress.absoluteValue)} kg\n Progress from ${sortedDates[index - 1]}"
+
+            progressWeight.text = SpannableString(progressText).apply {
+                setSpan(
+                    ForegroundColorSpan(if (isWeightLoss) Color.GREEN else Color.RED),
+                    0, progressText.indexOf("kg"),
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                setSpan(
+                    RelativeSizeSpan(2f),
+                    0,
+                    progressText.indexOf("kg"),
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                val progressStartIndex = progressText.indexOf("\n") + 1
+                setSpan(
+                    RelativeSizeSpan(0.7f),
+                    progressStartIndex,
+                    progressText.length,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+        } else {
+            progressWeight.text = "No progress data"
+        }
+        if (index > 0) {
+        // Obliczanie całkowitego progresu dla `progressWeight2`
+        val totalProgress = selectedWeight - weightsList.first()
+        val isTotalWeightLoss = totalProgress < 0
+        val daysAgo = calculateDaysAgo(sortedDates[0].substringBefore(" "), sortedDates[index].substringBefore(" ") )
+        val totalProgressText = "${String.format("%.1f", totalProgress.absoluteValue)} kg\nCompared with $daysAgo days ago\n (${sortedDates[0]})"
+
+        progressWeight2.text = SpannableString(totalProgressText).apply {
+            setSpan(
+                ForegroundColorSpan(if (isTotalWeightLoss) Color.GREEN else Color.RED),
+                0, totalProgressText.indexOf("kg"),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            val numberEndIndex = totalProgressText.indexOf("kg")
+            setSpan(ForegroundColorSpan(if (isTotalWeightLoss) Color.GREEN else Color.RED), 0, numberEndIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            setSpan(RelativeSizeSpan(2f), 0, numberEndIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            setSpan(RelativeSizeSpan(0.7f), totalProgressText.indexOf("Compared"), totalProgressText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        }
+        } else{
+            progressWeight2.text = "No progress data"
+        }
+
+    }
+
+
 
 
     private fun snapToNearestDot() {
@@ -641,27 +670,30 @@ class Progress : BaseActivity(), OnChartValueSelectedListener {
         val closestEntry = lineChart.data.getDataSetByIndex(0)
             ?.getEntryForXValue(centerX, Float.NaN, DataSet.Rounding.CLOSEST)
 
-        closestEntry?.let { entry ->
-            val index = entry.x.toInt()
+        if (closestEntry != null) {
+            val index = closestEntry.x.toInt()
+            Log.d("DEBUG", "snapToNearestDot: Index=$index, weightsList size=${weightsList.size}")
 
-            if (index in weightsList.indices) {
-                val userId = Utils.getUserIdFromSharedPreferences(this)
-                val (weights, dates, hours) = dbHelper.getWeightProgress(userId)
+            if (index in sortedDates.indices && index in weightsList.indices) {
+                val selectedDateTime = sortedDates[index]
+                val selectedWeight = weightsList[index]
 
-                val selectedDate = dates[index]
-                val selectedHour = hours[index]
-                val selectedWeight = weights[index]
+                Log.d("DEBUG", "snapToNearestDot: DateTime=$selectedDateTime, Weight=$selectedWeight")
 
-                Log.d("DEBUG", "snapToNearestDot: Index=$index, Date=$selectedDate, Hour=$selectedHour, Weight=$selectedWeight")
-
-                lineChart.centerViewToAnimated(entry.x, entry.y, YAxis.AxisDependency.LEFT, 300)
                 // Aktualizacja danych w interfejsie
-                updateChartDataWithHour(selectedDate, selectedHour, selectedWeight)
+                weightProg.text = "$selectedWeight kg"
+                updateProgressFields(selectedWeight, index)
+
+                lineChart.centerViewToAnimated(closestEntry.x, closestEntry.y, YAxis.AxisDependency.LEFT, 300)
             } else {
-                Log.e("DEBUG", "snapToNearestDot: Index $index out of bounds for weightsList size=${weightsList.size}")
+                Log.e("DEBUG", "snapToNearestDot: Index $index out of bounds!")
             }
+        } else {
+            Log.e("DEBUG", "snapToNearestDot: closestEntry is null")
         }
     }
+
+
 
 
     private fun calculateDailyProgress(dates: List<String>, weights: List<Float>): List<Float> {
