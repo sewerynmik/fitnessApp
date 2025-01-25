@@ -76,6 +76,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL("INSERT INTO weight_progress (weight, date, user_id, hour) VALUES (88.5, '22-11-2024', 1,'10:00')")
         db.execSQL("INSERT INTO weight_progress (weight, date, user_id, hour) VALUES (85, '20-11-2024', 1,'12:00')")
         db.execSQL("INSERT INTO weight_progress (weight, date, user_id, hour) VALUES (72, '15-11-2024', 1,'14:00')")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id, hour) VALUES (70.5, '15-11-2024', 2,'14:00')")
+
 
         db.execSQL("INSERT INTO routes (date, distance, time, user_id, hour) VALUES ('23.01.2025', 5.3, '00:45:00', 1,'10:00')")
         db.execSQL("INSERT INTO routes (date, distance, time, user_id, hour) VALUES ('22.01.2025', 3.2, '00:30:00', 1,'12:00')")

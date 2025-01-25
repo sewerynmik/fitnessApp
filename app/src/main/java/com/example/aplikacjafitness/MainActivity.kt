@@ -398,8 +398,10 @@ class MainActivity : BaseActivity(), SensorEventListener {
         val db = dbHelper.readableDatabase
 
         // Zapytanie o najnowszy bieg
-        val query = "SELECT id, date, distance, time FROM routes ORDER BY id DESC LIMIT 1"
-        val cursor = db.rawQuery(query, null)
+        val userId = getUserIdFromSharedPreferences()
+        val query = "SELECT id, date, distance, time FROM routes WHERE user_id = ? ORDER BY id DESC LIMIT 1"
+        val cursor = db.rawQuery(query, arrayOf(userId.toString()))
+
 
         // Odwołania do widoków
         val distanceTextView: TextView = findViewById(R.id.biegi)
