@@ -16,7 +16,7 @@ import kotlin.text.toFloat
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val DATABASE_NAME = "FitnessApp.db"
-        private const val DATABASE_VERSION = 12 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
+        private const val DATABASE_VERSION = 13 // jak sie cos robi odnoscnie tabel itp to zmienic numerek tutaj
     }
     @Volatile
     private var INSTANCE: DatabaseHelper? = null
@@ -66,26 +66,27 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 "\t\"distance\"\tREAL,\n" +
                 "\t\"time\"\tTEXT,\n" +
                 "\t\"user_id\"\tINTEGER,\n" +
+                "\t\"hour\"\tTEXT,\n" +
                 "\tCONSTRAINT \"fk_routes_user\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\")\n" +
                 ")")
 
         db.execSQL("INSERT INTO users (email, name, surname, born_date, weight, height, daily_steps_target, password) VALUES ('email@mail.com', 'John', 'Doe', '1990-01-01', 70.5, 180.0, 8000, 'pass')")
         db.execSQL("INSERT INTO users (email, name, surname, born_date, weight, height, daily_steps_target, password) VALUES ('email2@mail.com', 'John2', 'Doe2', '1990-01-01', 70.5, 180.0, 8000, 'pass')")
 
-        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('23-11-2024', 567, 1)")
-        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('22-11-2024', 1234, 1)")
-        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('21-11-2024', 2312, 1)")
-        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('19-11-2024', 1876, 1)")
-        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('18-11-2024', 1927, 1)")
-        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('17-11-2024', 2534, 1)")
+        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('23-01-2025', 567, 1)")
+        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('22-01-2025', 1234, 1)")
+        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('21-01-2025', 2312, 1)")
+        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('19-01-2025', 1876, 1)")
+        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('18-01-2025', 1927, 1)")
+        db.execSQL("INSERT INTO daily_steps (date, steps, user_id) VALUES ('17-01-2025', 2534, 1)")
 
-        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (88.5, '22-11-2024', 1)")
-        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (85, '20-11-2024', 1)")
-        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (72, '15-11-2024', 1)")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (88.5, '22-11-2024', 1,'10:00')")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (85, '20-11-2024', 1,'12:00')")
+        db.execSQL("INSERT INTO weight_progress (weight, date, user_id) VALUES (72, '15-11-2024', 1,'14:00')")
 
-        db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('23.11.2024', 5.3, '00:45:00', 1)")
-        db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('22.11.2024', 3.2, '00:30:00', 1)")
-        db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('21.11.2024', 4.8, '00:40:00', 2)")
+        db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('23.01.2025', 5.3, '00:45:00', 1,'10:00')")
+        db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('22.01.2025', 3.2, '00:30:00', 1,'12:00')")
+        db.execSQL("INSERT INTO routes (date, distance, time, user_id) VALUES ('21.01.2025', 4.8, '00:40:00', 2,'13:00')")
     }
 
 
